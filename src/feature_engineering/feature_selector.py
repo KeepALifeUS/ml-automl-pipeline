@@ -1,6 +1,6 @@
 """
 Advanced Feature Selection for AutoML Pipeline
-Implements Context7 enterprise patterns for robust feature selection
+Implements enterprise patterns for robust feature selection
 """
 
 import logging
@@ -59,7 +59,7 @@ class FeatureSelectionResult:
 
 
 class BaseFeatureSelector(ABC):
-    """Базовый класс для селекторов признаков - Context7 pattern"""
+    """Базовый класс для селекторов признаков -  pattern"""
     
     @abstractmethod
     def select(self, X: pd.DataFrame, y: pd.Series, **kwargs) -> FeatureSelectionResult:
@@ -416,7 +416,7 @@ class VarianceFeatureSelector(BaseFeatureSelector):
 class AdvancedFeatureSelector:
     """
     Продвинутый селектор признаков с множественными методами
-    Реализует Context7 enterprise patterns
+    Реализует enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):

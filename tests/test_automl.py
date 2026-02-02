@@ -1,6 +1,6 @@
 """
 Comprehensive Test Suite for ML AutoML Pipeline
-Tests core functionality with Context7 enterprise patterns
+Tests core functionality with enterprise patterns
 """
 
 import pytest

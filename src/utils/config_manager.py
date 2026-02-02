@@ -1,6 +1,6 @@
 """
 Configuration Manager for AutoML Pipeline
-Implements Context7 enterprise patterns for configuration management
+Implements enterprise patterns for configuration management
 """
 
 import logging
@@ -218,7 +218,7 @@ class ModelEvaluationConfig:
 class AutoMLConfig(BaseSettings):
     """
     Главная конфигурация AutoML Pipeline
-    Реализует Context7 enterprise patterns для configuration management
+    Реализует enterprise patterns для configuration management
     """
     
     # Основные параметры

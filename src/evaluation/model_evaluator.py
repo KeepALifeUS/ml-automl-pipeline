@@ -1,6 +1,6 @@
 """
 Comprehensive Model Evaluator for Crypto Trading AutoML
-Implements Context7 enterprise patterns for thorough model evaluation
+Implements enterprise patterns for thorough model evaluation
 """
 
 import logging
@@ -179,7 +179,7 @@ class CryptoTradingMetrics:
 class ModelEvaluator:
     """
     Комплексный оценщик моделей для криптотрейдинга
-    Реализует Context7 enterprise patterns
+    Реализует enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):

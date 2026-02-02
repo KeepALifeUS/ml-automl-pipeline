@@ -1,6 +1,6 @@
 """
 Advanced Model Selection for Crypto Trading AutoML
-Implements Context7 enterprise patterns for robust model selection
+Implements enterprise patterns for robust model selection
 """
 
 import logging
@@ -62,7 +62,7 @@ class ModelSelectionResult:
 
 
 class BaseModelProvider(ABC):
-    """Базовый класс для провайдеров моделей - Context7 pattern"""
+    """Базовый класс для провайдеров моделей -  pattern"""
     
     @abstractmethod
     def get_models(self, task_type: TaskType) -> Dict[str, Any]:
@@ -180,7 +180,7 @@ class GradientBoostingModelProvider(BaseModelProvider):
 class ModelSelector:
     """
     Продвинутый селектор моделей для криптотрейдинга
-    Реализует Context7 enterprise patterns
+    Реализует enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):

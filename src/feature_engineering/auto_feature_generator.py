@@ -1,6 +1,6 @@
 """
 Automated Feature Generator for Crypto Trading AutoML Pipeline
-Implements Context7 enterprise patterns for scalable feature generation
+Implements enterprise patterns for scalable feature generation
 """
 
 import logging
@@ -42,7 +42,7 @@ class FeatureGenerationResult:
 
 
 class BaseFeatureGenerator(ABC):
-    """Базовый класс для генераторов признаков - Context7 pattern"""
+    """Базовый класс для генераторов признаков -  pattern"""
     
     @abstractmethod
     def generate(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -336,7 +336,7 @@ class TSFreshFeatureGenerator(BaseFeatureGenerator):
 class AutoFeatureGenerator:
     """
     Главный класс для автоматической генерации признаков
-    Реализует Context7 enterprise patterns
+    Реализует enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):

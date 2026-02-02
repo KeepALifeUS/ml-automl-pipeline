@@ -1,6 +1,6 @@
 """
 Bayesian Hyperparameter Optimization for Crypto Trading AutoML
-Implements Context7 enterprise patterns for robust optimization
+Implements enterprise patterns for robust optimization
 """
 
 import logging
@@ -58,7 +58,7 @@ class OptimizationResult:
 
 
 class BaseOptimizer(ABC):
-    """Базовый класс для оптимизаторов - Context7 pattern"""
+    """Базовый класс для оптимизаторов -  pattern"""
     
     @abstractmethod
     def optimize(
@@ -337,7 +337,7 @@ class OptunaBayesianOptimizer(BaseOptimizer):
 class CryptoMLHyperparameterOptimizer:
     """
     Главный класс для оптимизации гиперпараметров в криптотрейдинге
-    Реализует Context7 enterprise patterns
+    Реализует enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):

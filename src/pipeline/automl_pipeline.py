@@ -1,6 +1,6 @@
 """
 Main AutoML Pipeline for Crypto Trading Bot v5.0
-Orchestrates the complete machine learning workflow with Context7 enterprise patterns
+Orchestrates the complete machine learning workflow with enterprise patterns
 """
 
 import logging
@@ -69,7 +69,7 @@ class PipelineResult:
 class AutoMLPipeline:
     """
     Главный класс AutoML пайплайна для криптотрейдинга
-    Реализует Context7 enterprise patterns для scalable ML systems
+    Реализует enterprise patterns для scalable ML systems
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None, output_dir: Optional[str] = None):

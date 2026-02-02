@@ -1,6 +1,6 @@
 """
 Advanced Ensemble Builder for Crypto Trading AutoML
-Implements Context7 enterprise patterns for robust ensemble construction
+Implements enterprise patterns for robust ensemble construction
 """
 
 import logging
@@ -55,7 +55,7 @@ class EnsembleResult:
 
 
 class BaseEnsembleBuilder(ABC):
-    """Базовый класс для построителей ансамблей - Context7 pattern"""
+    """Базовый класс для построителей ансамблей -  pattern"""
     
     @abstractmethod
     def build(
@@ -334,7 +334,7 @@ class DynamicWeightingEnsemble(BaseEstimator, RegressorMixin):
 class EnsembleBuilder:
     """
     Главный класс для построения ансамблей
-    Реализует Context7 enterprise patterns
+    Реализует enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):

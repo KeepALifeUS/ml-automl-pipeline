@@ -1,6 +1,6 @@
 """
 Advanced Data Preprocessor for Crypto Trading AutoML
-Implements Context7 enterprise patterns for robust data preprocessing
+Implements enterprise patterns for robust data preprocessing
 """
 
 import logging
@@ -45,7 +45,7 @@ class PreprocessingResult:
 class DataPreprocessor:
     """
     Продвинутый препроцессор данных для криптотрейдинга
-    Реализует Context7 enterprise patterns
+    Реализует enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):
