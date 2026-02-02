@@ -3,13 +3,13 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ctb3-ml-automl-pipeline"
+name = "ml-automl-pipeline"
 version = "1.0.0"
 description = "Enterprise AutoML Pipeline for Crypto Trading Bot v5.0"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "CTB3 Team", email = "team@ctb3.io"}
+    {name = "ML Team", email = "team@example.com"}
 ]
 keywords = ["automl", "crypto", "trading", "machine-learning", "automation"]
 classifiers = [
