@@ -16,19 +16,19 @@ from loguru import logger
 
 @dataclass
 class FeatureGenerationConfig:
-    """Configuration генерации features"""
+    """Configuration generation features"""
     enable_technical_indicators: bool = True
     enable_statistical_features: bool = True
     enable_polynomial_features: bool = True
     enable_tsfresh_features: bool = True
     
-    # Parameters технических индикаторов
+    # Parameters technical indicators
     technical_indicators_windows: List[int] = field(default_factory=lambda: [10, 20, 50])
     
-    # Parameters статистических features
+    # Parameters statistical features
     statistical_windows: List[int] = field(default_factory=lambda: [5, 10, 20])
     
-    # Parameters полиномиальных features
+    # Parameters polynomial features
     polynomial_degree: int = 2
     polynomial_max_features: int = 50
     polynomial_interaction_only: bool = True
@@ -37,36 +37,36 @@ class FeatureGenerationConfig:
     tsfresh_max_features: int = 30
     tsfresh_default_fc_parameters: str = "efficient"
     
-    # Общие parameters
+    # General parameters
     parallel_generation: bool = True
     max_features_per_generator: int = 100
 
 
 @dataclass
 class FeatureSelectionConfig:
-    """Configuration отбора features"""
+    """Configuration selection features"""
     enable_statistical_selection: bool = True
     enable_model_based_selection: bool = True
     enable_correlation_selection: bool = True
     enable_variance_selection: bool = True
     
-    # Parameters статистического отбора
+    # Parameters statistical selection
     statistical_method: str = "f_regression"  # f_regression, mutual_info_regression
     statistical_k: int = 50
     statistical_percentile: float = 50.0
     
-    # Parameters модельного отбора
+    # Parameters selection
     model_type: str = "random_forest"  # random_forest, xgboost
     model_max_features: int = 100
     
-    # Parameters корреляционного отбора
+    # Parameters correlation selection
     correlation_threshold: float = 0.95
     target_correlation_min: float = 0.01
     
-    # Parameters отбора by дисперсии
+    # Parameters selection by variance
     variance_threshold: float = 0.0
     
-    # Ансамблевый selection
+    # Ensemble selection
     ensemble_selection: bool = True
     min_votes_threshold: int = 2
 
@@ -88,10 +88,10 @@ class HyperparameterOptimizationConfig:
     skopt_n_initial_points: int = 10
     skopt_acq_func: str = "EI"  # EI, PI, LCB
     
-    # Общие parameters
+    # General parameters
     cv_folds: int = 5
     scoring_metric: Optional[str] = None  # Automatic determination
-    timeout_per_trial: int = 300  # секунд
+    timeout_per_trial: int = 300 # seconds
     
     # Early stopping
     enable_pruning: bool = True
@@ -100,7 +100,7 @@ class HyperparameterOptimizationConfig:
 
 @dataclass
 class ModelSelectionConfig:
-    """Configuration отбора models"""
+    """Configuration selection models"""
     enable_sklearn_models: bool = True
     enable_xgboost: bool = True
     enable_lightgbm: bool = True
@@ -121,12 +121,12 @@ class ModelSelectionConfig:
     time_series_split: bool = True
     shuffle_split: bool = False
     
-    # Критерии отбора
+    # Criteria selection
     scoring_metric: Optional[str] = None
     top_k_models: int = 5
     
-    # Фильтрация models
-    max_training_time_per_model: int = 600  # секунд
+    # models
+    max_training_time_per_model: int = 600 # seconds
     min_score_threshold: Optional[float] = None
 
 
@@ -138,29 +138,29 @@ class EnsembleConfig:
     enable_blending: bool = True
     enable_bagging: bool = False
     
-    # Parameters голосующего ансамбля
+    # Parameters voting ensemble
     voting_estimators_limit: int = 10
     voting_weights: Optional[List[float]] = None
     
-    # Parameters стекинга
+    # Parameters stacking
     stacking_cv_folds: int = 5
     stacking_meta_learner: str = "ridge"  # ridge, linear_regression
     stacking_use_features_in_secondary: bool = True
     
-    # Parameters блендинга
+    # Parameters blending
     blending_holdout_size: float = 0.2
     
-    # Общие parameters
+    # General parameters
     ensemble_size_limit: int = 5
     min_ensemble_diversity: float = 0.1
 
 
 @dataclass
 class DataPreprocessingConfig:
-    """Configuration предобработки data"""
+    """Configuration preprocessing data"""
     # Processing missing values
     missing_value_strategy: str = "median"  # mean, median, mode, drop, forward_fill
-    missing_value_threshold: float = 0.5  # Threshold for удаления columns/rows
+    missing_value_threshold: float = 0.5 # Threshold for removal columns/rows
     
     # Processing outliers
     outlier_detection_method: str = "iqr"  # iqr, zscore, isolation_forest
@@ -175,24 +175,24 @@ class DataPreprocessingConfig:
     categorical_encoding: str = "onehot"  # onehot, label, target, binary
     max_categories_onehot: int = 10
     
-    # Processing temporal рядов
+    # Processing temporal series
     handle_seasonality: bool = True
     detrend_method: Optional[str] = None  # linear, polynomial
     
-    # Общие parameters
+    # General parameters
     random_state: int = 42
     n_jobs: int = -1
 
 
 @dataclass
 class ModelEvaluationConfig:
-    """Configuration оценки models"""
-    # Metrics for регрессии
+    """Configuration evaluation models"""
+    # Metrics for regression
     regression_metrics: List[str] = field(default_factory=lambda: [
         'mse', 'mae', 'r2', 'mape', 'rmse'
     ])
     
-    # Metrics for классификации
+    # Metrics for classification
     classification_metrics: List[str] = field(default_factory=lambda: [
         'accuracy', 'precision', 'recall', 'f1', 'auc'
     ])
@@ -201,7 +201,7 @@ class ModelEvaluationConfig:
     cv_folds: int = 5
     cv_scoring: Optional[str] = None
     
-    # Важность features
+    # features
     calculate_feature_importance: bool = True
     feature_importance_method: str = "permutation"  # permutation, shap, built_in
     
@@ -210,14 +210,14 @@ class ModelEvaluationConfig:
     plot_format: str = "png"  # png, pdf, svg
     plot_dpi: int = 300
     
-    # Отчеты
+    # Reports
     generate_report: bool = True
     report_format: str = "html"  # html, pdf, markdown
 
 
 class AutoMLConfig(BaseSettings):
     """
-    Главная configuration AutoML Pipeline
+    Main configuration AutoML Pipeline
     Implements enterprise patterns for configuration management
     """
     
@@ -227,20 +227,20 @@ class AutoMLConfig(BaseSettings):
     random_state: int = Field(default=42, env="AUTOML_RANDOM_STATE")
     n_jobs: int = Field(default=-1, env="AUTOML_N_JOBS")
     
-    # Пути
+    # Paths
     output_dir: str = Field(default="automl_output", env="AUTOML_OUTPUT_DIR")
     cache_dir: str = Field(default="automl_cache", env="AUTOML_CACHE_DIR")
     models_dir: str = Field(default="automl_models", env="AUTOML_MODELS_DIR")
     logs_dir: str = Field(default="automl_logs", env="AUTOML_LOGS_DIR")
     
-    # Regimes работы
+    # Regimes work
     debug_mode: bool = Field(default=False, env="AUTOML_DEBUG")
     verbose: bool = Field(default=True, env="AUTOML_VERBOSE")
     enable_caching: bool = Field(default=True, env="AUTOML_CACHE")
     
-    # Лимиты ресурсов
+    # Limits resources
     max_memory_gb: float = Field(default=8.0, env="AUTOML_MAX_MEMORY")
-    max_training_time: int = Field(default=3600, env="AUTOML_MAX_TIME")  # секунд
+    max_training_time: int = Field(default=3600, env="AUTOML_MAX_TIME") # seconds
     max_models_to_try: int = Field(default=50, env="AUTOML_MAX_MODELS")
     
     # Configuration components
@@ -254,14 +254,14 @@ class AutoMLConfig(BaseSettings):
     data_preprocessing: DataPreprocessingConfig = field(default_factory=DataPreprocessingConfig)
     model_evaluation: ModelEvaluationConfig = field(default_factory=ModelEvaluationConfig)
     
-    # Специфичные for crypto trading parameters
+    # Specific for crypto trading parameters
     crypto_specific: Dict[str, Any] = field(default_factory=lambda: {
         'enable_technical_indicators': True,
         'enable_market_regime_detection': True,
         'enable_volatility_features': True,
         'enable_momentum_features': True,
         'lookback_periods': [5, 10, 20, 50],
-        'prediction_horizon': 1,  # Горизонт predictions (periods)
+        'prediction_horizon': 1, # Horizon predictions (periods)
         'risk_adjusted_metrics': True,
         'walk_forward_validation': True
     })
@@ -273,20 +273,20 @@ class AutoMLConfig(BaseSettings):
     
     @validator('output_dir', 'cache_dir', 'models_dir', 'logs_dir')
     def create_directories(cls, v):
-        """Create directories if not существуют"""
+        """Create directories if not exist"""
         Path(v).mkdir(parents=True, exist_ok=True)
         return v
     
     @validator('max_memory_gb')
     def validate_memory(cls, v):
-        """Validation лимита memory"""
+        """Validation limit memory"""
         if v <= 0:
-            raise ValueError("max_memory_gb должно be положительным числом")
+            raise ValueError("max_memory_gb should be positive ")
         return v
     
     @validator('n_jobs')
     def validate_n_jobs(cls, v):
-        """Validation number процессов"""
+        """Validation number processes"""
         if v == 0:
             raise ValueError("n_jobs not can be 0")
         return v
@@ -304,9 +304,9 @@ class AutoMLConfig(BaseSettings):
             with open(filepath, 'w', encoding='utf-8') as f:
                 yaml.safe_dump(config_dict, f, default_flow_style=False)
         else:
-            raise ValueError("Поддерживаются only форматы .json, .yml, .yaml")
+            raise ValueError("Supported only formats .json, .yml, .yaml")
         
-        logger.info(f"💾 Configuration сохранена: {filepath}")
+        logger.info(f"💾 Configuration saved: {filepath}")
     
     @classmethod
     def load_from_file(cls, filepath: Union[str, Path]):
@@ -314,7 +314,7 @@ class AutoMLConfig(BaseSettings):
         filepath = Path(filepath)
         
         if not filepath.exists():
-            raise FileNotFoundError(f"File configuration not найден: {filepath}")
+            raise FileNotFoundError(f"File configuration not found: {filepath}")
         
         if filepath.suffix.lower() == '.json':
             with open(filepath, 'r', encoding='utf-8') as f:
@@ -323,9 +323,9 @@ class AutoMLConfig(BaseSettings):
             with open(filepath, 'r', encoding='utf-8') as f:
                 config_dict = yaml.safe_load(f)
         else:
-            raise ValueError("Поддерживаются only форматы .json, .yml, .yaml")
+            raise ValueError("Supported only formats .json, .yml, .yaml")
         
-        logger.info(f"📂 Configuration загружена: {filepath}")
+        logger.info(f"📂 Configuration loaded: {filepath}")
         
         return cls(**config_dict)
     
@@ -357,7 +357,7 @@ class AutoMLConfig(BaseSettings):
         # Base configuration for sklearn models
         base_config = model_configs.get('sklearn', {})
         
-        # Специфичные configuration
+        # Specific configuration
         if model_name.startswith('xgb') or model_name == 'xgboost':
             return {**base_config, **model_configs['xgboost']}
         elif model_name.startswith('lgb') or model_name == 'lightgbm':
@@ -378,7 +378,7 @@ class AutoMLConfig(BaseSettings):
         }
     
     def get_validation_config(self) -> Dict[str, Any]:
-        """Get configuration for валидации"""
+        """Get configuration for validation"""
         return {
             'cv_folds': self.model_selection.cv_folds,
             'time_series_split': self.model_selection.time_series_split,
@@ -387,25 +387,25 @@ class AutoMLConfig(BaseSettings):
         }
     
     def __str__(self) -> str:
-        """Строковое представление configuration"""
+        """String representation configuration"""
         return f"AutoMLConfig(project='{self.project_name}', version='{self.version}')"
 
 
 # Preset configuration
 class PresetConfigs:
-    """Preset configuration for разных scenarios"""
+    """Preset configuration for different scenarios"""
     
     @staticmethod
     def fast_prototype() -> AutoMLConfig:
-        """Fast configuration for прототипирования"""
+        """Fast configuration for prototyping"""
         config = AutoMLConfig()
         
-        # Уменьшаем number iterations
+        # Decreasing number iterations
         config.hyperparameter_optimization.n_trials = 20
         config.model_selection.cv_folds = 3
         config.model_evaluation.cv_folds = 3
         
-        # Disable complex генераторы features
+        # Disable complex features
         config.feature_generation.enable_tsfresh_features = False
         config.feature_generation.enable_polynomial_features = False
         
@@ -417,23 +417,23 @@ class PresetConfigs:
     
     @staticmethod
     def production_ready() -> AutoMLConfig:
-        """Configuration for продакшена"""
+        """Configuration for production"""
         config = AutoMLConfig()
         
-        # Увеличиваем number iterations
+        # Increasing number iterations
         config.hyperparameter_optimization.n_trials = 200
         config.model_selection.cv_folds = 10
         config.model_evaluation.cv_folds = 10
         
-        # Включаем all functions
+        # Enable all functions
         config.feature_generation.enable_tsfresh_features = True
         config.feature_generation.enable_polynomial_features = True
         
-        # Включаем ensembles
+        # Enable ensembles
         config.ensemble.enable_stacking = True
         config.ensemble.enable_voting = True
         
-        # Включаем подробную оценку
+        # Enable detailed
         config.model_evaluation.calculate_feature_importance = True
         config.model_evaluation.generate_plots = True
         config.model_evaluation.generate_report = True
@@ -445,7 +445,7 @@ class PresetConfigs:
         """Specialized configuration for crypto trading"""
         config = AutoMLConfig()
         
-        # Configure под temporal ряды
+        # Configure under temporal series
         config.model_selection.time_series_split = True
         config.data_preprocessing.handle_seasonality = True
         
@@ -453,7 +453,7 @@ class PresetConfigs:
         config.feature_generation.enable_technical_indicators = True
         config.feature_generation.technical_indicators_windows = [5, 10, 20, 50, 100]
         
-        # Специфичные parameters
+        # Specific parameters
         config.crypto_specific.update({
             'enable_volatility_features': True,
             'enable_momentum_features': True,
@@ -462,7 +462,7 @@ class PresetConfigs:
             'prediction_horizon': 1
         })
         
-        # Model подходящие for temporal рядов
+        # Model suitable for temporal series
         config.model_selection.sklearn_models = [
             'ridge', 'lasso', 'elasticnet', 'random_forest', 'gradient_boosting'
         ]
@@ -475,23 +475,23 @@ class PresetConfigs:
         """Configuration for high-frequency trading"""
         config = PresetConfigs.crypto_trading()
         
-        # Сокращаем время training
-        config.max_training_time = 1800  # 30 минут
+        # Reducing time training
+        config.max_training_time = 1800 # 30 minutes
         config.hyperparameter_optimization.n_trials = 50
         config.hyperparameter_optimization.timeout_per_trial = 60
         
         # Fast model
         config.model_selection.sklearn_models = ['ridge', 'lasso']
-        config.model_selection.gradient_boosting_models = ['lightgbm']  # Самый fast
+        config.model_selection.gradient_boosting_models = ['lightgbm'] # Most fast
         
-        # Disable сложную генерацию features
+        # Disable complex generation features
         config.feature_generation.enable_tsfresh_features = False
         config.feature_generation.polynomial_max_features = 20
         
-        # Специфичные parameters for HFT
+        # Specific parameters for HFT
         config.crypto_specific.update({
-            'lookback_periods': [1, 2, 3, 5],  # Короткие periods
-            'prediction_horizon': 1,  # Only следующий тик
+            'lookback_periods': [1, 2, 3, 5], # Short periods
+            'prediction_horizon': 1, # Only next
             'enable_microstructure_features': True,
             'enable_order_book_features': True
         })
@@ -500,7 +500,7 @@ class PresetConfigs:
 
 
 if __name__ == "__main__":
-    # Пример use
+    # Example use
     
     # Create base configuration
     config = AutoMLConfig()
@@ -511,7 +511,7 @@ if __name__ == "__main__":
     
     # Load from file
     loaded_config = AutoMLConfig.load_from_file("automl_config.json")
-    print(f"Загруженная configuration: {loaded_config}")
+    print(f"Loaded configuration: {loaded_config}")
     
     # Preset configuration
     fast_config = PresetConfigs.fast_prototype()
@@ -524,6 +524,6 @@ if __name__ == "__main__":
     xgb_config = config.get_model_config('xgboost')
     print(f"Configuration XGBoost: {xgb_config}")
     
-    # Configuration валидации
+    # Configuration validation
     validation_config = config.get_validation_config()
-    print(f"Configuration валидации: {validation_config}")
+    print(f"Configuration validation: {validation_config}")

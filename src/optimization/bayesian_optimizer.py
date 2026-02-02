@@ -58,7 +58,7 @@ class OptimizationResult:
 
 
 class BaseOptimizer(ABC):
-    """Base класс for оптимизаторов -  pattern"""
+    """Base class for optimizers - pattern"""
     
     @abstractmethod
     def optimize(
@@ -67,12 +67,12 @@ class BaseOptimizer(ABC):
         search_space: Dict[str, Any],
         n_calls: int = 100
     ) -> OptimizationResult:
-        """Оптимизировать hyperparameters"""
+        """Optimize hyperparameters"""
         pass
 
 
 class SkoptBayesianOptimizer(BaseOptimizer):
-    """Байесовский оптимизатор on основе scikit-optimize"""
+    """Bayesian optimizer on basis scikit-optimize"""
     
     def __init__(self, method: OptimizationMethod = OptimizationMethod.GAUSSIAN_PROCESS):
         self.method = method
@@ -91,17 +91,17 @@ class SkoptBayesianOptimizer(BaseOptimizer):
         logger.info(f"🎯 Launch Bayesian optimization method {self.method.value}")
         
         try:
-            # Transform space поиска
+            # Transform space search
             dimensions = self._convert_search_space(search_space)
             
-            # Оборачиваем target функцию for отслеживания истории
+            # Wrapping target function for tracking history
             @use_named_args(dimensions)
             def wrapped_objective(**params):
                 score = objective_function(params)
                 self.optimization_history.append({'params': params.copy(), 'score': score})
-                return score  # scikit-optimize минимизирует, поэтому return as there is
+                return score # scikit-optimize minimizes, therefore return as there is
             
-            # Select алгоритма optimization
+            # Select algorithm optimization
             if self.method == OptimizationMethod.GAUSSIAN_PROCESS:
                 result = gp_minimize(
                     func=wrapped_objective,
@@ -125,7 +125,7 @@ class SkoptBayesianOptimizer(BaseOptimizer):
                     random_state=random_state
                 )
             
-            # Извлечение best parameters
+            # Extraction best parameters
             best_params = {}
             for i, dim in enumerate(dimensions):
                 best_params[dim.name] = result.x[i]
@@ -147,7 +147,7 @@ class SkoptBayesianOptimizer(BaseOptimizer):
                 model_name="unknown"
             )
             
-            logger.info(f"✅ Optimization завершена: best score {result.fun:.4f}")
+            logger.info(f"✅ Optimization completed: best score {result.fun:.4f}")
             return optimization_result
             
         except Exception as e:
@@ -163,7 +163,7 @@ class SkoptBayesianOptimizer(BaseOptimizer):
             )
     
     def _convert_search_space(self, search_space: Dict[str, Any]) -> List:
-        """Convert space поиска in формат scikit-optimize"""
+        """Convert space search in format scikit-optimize"""
         dimensions = []
         
         for param_name, param_config in search_space.items():
@@ -189,11 +189,11 @@ class SkoptBayesianOptimizer(BaseOptimizer):
         return dimensions
     
     def _calculate_convergence_rate(self, func_vals: np.ndarray) -> float:
-        """Computation speed сходимости"""
+        """Computation speed convergence"""
         if len(func_vals) < 2:
             return 0.0
         
-        # Вычисляем относительное улучшение
+        # Computing relative improvement
         improvements = []
         best_so_far = func_vals[0]
         
@@ -209,7 +209,7 @@ class SkoptBayesianOptimizer(BaseOptimizer):
 
 
 class OptunaBayesianOptimizer(BaseOptimizer):
-    """Оптимизатор on основе Optuna"""
+    """Optimizer on basis Optuna"""
     
     def __init__(self, method: OptimizationMethod = OptimizationMethod.OPTUNA_TPE):
         self.method = method
@@ -228,7 +228,7 @@ class OptunaBayesianOptimizer(BaseOptimizer):
         logger.info(f"🔥 Launch optimization Optuna method {self.method.value}")
         
         try:
-            # Create исследования
+            # Create exploration
             if self.method == OptimizationMethod.OPTUNA_TPE:
                 sampler = optuna.samplers.TPESampler(seed=random_state)
             else:  # OPTUNA_RANDOM
@@ -269,7 +269,7 @@ class OptunaBayesianOptimizer(BaseOptimizer):
             # Launch optimization
             self.study.optimize(optuna_objective, n_trials=n_calls, show_progress_bar=True)
             
-            # Сбор истории optimization
+            # Collection history optimization
             optimization_history = []
             func_vals = []
             
@@ -300,7 +300,7 @@ class OptunaBayesianOptimizer(BaseOptimizer):
                 model_name="unknown"
             )
             
-            logger.info(f"✅ Optuna optimization завершена: best score {self.study.best_value:.4f}")
+            logger.info(f"✅ Optuna optimization completed: best score {self.study.best_value:.4f}")
             return optimization_result
             
         except Exception as e:
@@ -316,7 +316,7 @@ class OptunaBayesianOptimizer(BaseOptimizer):
             )
     
     def _calculate_optuna_convergence_rate(self, func_vals: List[float]) -> float:
-        """Computation speed сходимости for Optuna"""
+        """Computation speed convergence for Optuna"""
         if len(func_vals) < 2:
             return 0.0
         
@@ -336,7 +336,7 @@ class OptunaBayesianOptimizer(BaseOptimizer):
 
 class CryptoMLHyperparameterOptimizer:
     """
-    Главный класс for optimization hyperparameters in crypto trading
+    Main class for optimization hyperparameters in crypto trading
     Implements enterprise patterns
     """
     
@@ -348,10 +348,10 @@ class CryptoMLHyperparameterOptimizer:
         self._setup_search_spaces()
         
     def _setup_optimizers(self):
-        """Configure оптимизаторов"""
-        logger.info("🔧 Configure оптимизаторов...")
+        """Configure optimizers"""
+        logger.info("🔧 Configure optimizers...")
         
-        # Scikit-optimize оптимизаторы
+        # Scikit-optimize optimizers
         self.optimizers['gaussian_process'] = SkoptBayesianOptimizer(
             OptimizationMethod.GAUSSIAN_PROCESS
         )
@@ -362,7 +362,7 @@ class CryptoMLHyperparameterOptimizer:
             OptimizationMethod.GRADIENT_BOOSTING
         )
         
-        # Optuna оптимизаторы
+        # Optuna optimizers
         self.optimizers['optuna_tpe'] = OptunaBayesianOptimizer(
             OptimizationMethod.OPTUNA_TPE
         )
@@ -370,11 +370,11 @@ class CryptoMLHyperparameterOptimizer:
             OptimizationMethod.OPTUNA_RANDOM
         )
         
-        logger.info(f"✅ Настроено {len(self.optimizers)} оптимизаторов")
+        logger.info(f"✅ Configured {len(self.optimizers)} optimizers")
     
     def _setup_search_spaces(self):
-        """Configure пространств поиска for various models"""
-        logger.info("🌐 Configure пространств поиска...")
+        """Configure spaces search for various models"""
+        logger.info("🌐 Configure spaces search...")
         
         # Random Forest
         self.model_search_spaces['random_forest'] = {
@@ -431,10 +431,10 @@ class CryptoMLHyperparameterOptimizer:
             'epsilon': {'type': 'real', 'low': 0.01, 'high': 1.0},
         }
         
-        logger.info(f"✅ Настроено space поиска for {len(self.model_search_spaces)} models")
+        logger.info(f"✅ Configured space search for {len(self.model_search_spaces)} models")
     
     def _get_model(self, model_name: str, params: Dict[str, Any]):
-        """Create model with заданными parameters"""
+        """Create model with parameters"""
         if model_name == 'random_forest':
             return RandomForestRegressor(**params, random_state=42, n_jobs=-1)
         elif model_name == 'xgboost':
@@ -450,7 +450,7 @@ class CryptoMLHyperparameterOptimizer:
         elif model_name == 'svr':
             return SVR(**params)
         else:
-            raise ValueError(f"Неизвестная model: {model_name}")
+            raise ValueError(f" model: {model_name}")
     
     def optimize_model(
         self,
@@ -469,20 +469,20 @@ class CryptoMLHyperparameterOptimizer:
         Args:
             X: Matrix features
             y: Target variable
-            model_name: Название model for optimization
+            model_name: Name model for optimization
             optimizer_method: Method optimization
             n_calls: Number iterations optimization
             cv_folds: Number folds for cross-validation
-            scoring: Метрика for optimization
-            time_series_split: Использовать TimeSeriesSplit
+            scoring: Metric for optimization
+            time_series_split: Use TimeSeriesSplit
         """
         logger.info(f"🎯 Launch optimization model {model_name}")
         
         if model_name not in self.model_search_spaces:
-            raise ValueError(f"Model {model_name} not поддерживается")
+            raise ValueError(f"Model {model_name} not supported")
         
         if optimizer_method not in self.optimizers:
-            raise ValueError(f"Оптимизатор {optimizer_method} not найден")
+            raise ValueError(f"Optimizer {optimizer_method} not found")
         
         # Configure cross-validation
         if time_series_split:
@@ -504,12 +504,12 @@ class CryptoMLHyperparameterOptimizer:
                     n_jobs=-1
                 )
                 
-                # Return отрицательное value for минимизации
+                # Return negative value for minimization
                 return -np.mean(scores)
                 
             except Exception as e:
                 logger.warning(f"⚠️ Error in target functions: {e}")
-                return float('inf')  # Плохой score for неудачных parameters
+                return float('inf') # Bad score for failed parameters
         
         # Launch optimization
         search_space = self.model_search_spaces[model_name]
@@ -521,10 +521,10 @@ class CryptoMLHyperparameterOptimizer:
             n_calls=n_calls
         )
         
-        # Add информации о model
+        # Add information model
         result.model_name = model_name
         
-        logger.info(f"✅ Optimization {model_name} завершена: best score {-result.best_score:.4f}")
+        logger.info(f"✅ Optimization {model_name} completed: best score {-result.best_score:.4f}")
         
         return result
     
@@ -537,13 +537,13 @@ class CryptoMLHyperparameterOptimizer:
         n_calls: int = 50,
         parallel: bool = False
     ) -> Dict[str, OptimizationResult]:
-        """Optimization нескольких models"""
+        """Optimization several models"""
         logger.info(f"🚀 Optimization {len(models)} models...")
         
         results = {}
         
         if parallel:
-            # Параллельная optimization (can потребовать много memory)
+            # Parallel optimization (can require many memory)
             from joblib import Parallel, delayed
             
             def optimize_single_model(model_name):
@@ -579,7 +579,7 @@ class CryptoMLHyperparameterOptimizer:
                     
                     progress.advance(task)
         
-        logger.info(f"✅ Завершена optimization {len(results)} models")
+        logger.info(f"✅ Completed optimization {len(results)} models")
         
         return results
     
@@ -588,29 +588,29 @@ class CryptoMLHyperparameterOptimizer:
         result: OptimizationResult,
         save_path: Optional[str] = None
     ):
-        """Visualization истории optimization"""
+        """Visualization history optimization"""
         try:
             fig, axes = plt.subplots(2, 2, figsize=(15, 10))
             
-            # График сходимости
+            # Chart convergence
             if 'func_vals' in result.convergence_data:
                 func_vals = result.convergence_data['func_vals']
                 axes[0, 0].plot(func_vals)
-                axes[0, 0].set_title('Сходимость optimization')
+                axes[0, 0].set_title('Convergence optimization')
                 axes[0, 0].set_xlabel('Iteration')
                 axes[0, 0].set_ylabel('Value target functions')
                 axes[0, 0].grid(True)
             
-            # Распределение scores
+            # Distribution scores
             if result.optimization_history:
                 scores = [h['score'] for h in result.optimization_history]
                 axes[0, 1].hist(scores, bins=20, alpha=0.7)
-                axes[0, 1].set_title('Распределение scores')
+                axes[0, 1].set_title('Distribution scores')
                 axes[0, 1].set_xlabel('Score')
-                axes[0, 1].set_ylabel('Частота')
+                axes[0, 1].set_ylabel('Frequency')
                 axes[0, 1].grid(True)
             
-            # Улучшения со временем
+            # Improvements with time
             if result.optimization_history:
                 scores = [h['score'] for h in result.optimization_history]
                 best_scores = []
@@ -622,16 +622,16 @@ class CryptoMLHyperparameterOptimizer:
                     best_scores.append(best_so_far)
                 
                 axes[1, 0].plot(best_scores)
-                axes[1, 0].set_title('Best score со временем')
+                axes[1, 0].set_title('Best score with time')
                 axes[1, 0].set_xlabel('Iteration')
                 axes[1, 0].set_ylabel('Best score')
                 axes[1, 0].grid(True)
             
-            # Статистика optimization
+            # Statistics optimization
             stats_text = f"""
             Model: {result.model_name}
             Method: {result.method_used}
-            Время: {result.optimization_time:.2f}with
+            Time: {result.optimization_time:.2f}with
             Best score: {result.best_score:.4f}
             Iterations: {len(result.optimization_history)}
             """
@@ -640,22 +640,22 @@ class CryptoMLHyperparameterOptimizer:
             axes[1, 1].set_xlim(0, 1)
             axes[1, 1].set_ylim(0, 1)
             axes[1, 1].axis('off')
-            axes[1, 1].set_title('Статистика optimization')
+            axes[1, 1].set_title('Statistics optimization')
             
             plt.tight_layout()
             
             if save_path:
                 plt.savefig(save_path, dpi=300, bbox_inches='tight')
-                logger.info(f"📊 График optimization сохранен: {save_path}")
+                logger.info(f"📊 Chart optimization saved: {save_path}")
             else:
                 plt.show()
                 
         except Exception as e:
-            logger.error(f"❌ Error creation графика optimization: {e}")
+            logger.error(f"❌ Error creation optimization: {e}")
     
     def get_optimization_report(self, results: Dict[str, OptimizationResult]) -> str:
-        """Create отчета by optimization"""
-        report = "=== ОТЧЕТ By Optimization Hyperparameters ===\n\n"
+        """Create report by optimization"""
+        report = "=== REPORT By Optimization Hyperparameters ===\n\n"
         
         # Sort models by best score
         sorted_results = sorted(
@@ -666,7 +666,7 @@ class CryptoMLHyperparameterOptimizer:
         for i, (model_name, result) in enumerate(sorted_results, 1):
             report += f"{i}. {model_name.upper()}\n"
             report += f"   Best score: {result.best_score:.4f}\n"
-            report += f"   Время optimization: {result.optimization_time:.2f}with\n"
+            report += f" Time optimization: {result.optimization_time:.2f}with\n"
             report += f"   Method: {result.method_used}\n"
             report += f"   Best parameters:\n"
             
@@ -675,18 +675,18 @@ class CryptoMLHyperparameterOptimizer:
             
             report += "\n"
         
-        # Total статистика
+        # Total statistics
         total_time = sum(r.optimization_time for r in results.values())
         best_overall = min(results.values(), key=lambda x: x.best_score)
         
-        report += f"Общее время optimization: {total_time:.2f}with\n"
+        report += f"Total time optimization: {total_time:.2f}with\n"
         report += f"Best model: {best_overall.model_name} (score: {best_overall.best_score:.4f})\n"
         
         return report
 
 
 if __name__ == "__main__":
-    # Пример use
+    # Example use
     from ..utils.config_manager import AutoMLConfig
     
     # Create test data
@@ -705,25 +705,25 @@ if __name__ == "__main__":
         0.1 * np.random.randn(n_samples)
     )
     
-    # Create оптимизатора
+    # Create optimizer
     config = AutoMLConfig()
     optimizer = CryptoMLHyperparameterOptimizer(config)
     
-    # Optimization одной model
+    # Optimization one model
     result = optimizer.optimize_model(
         X, y, 
         model_name='xgboost',
         optimizer_method='optuna_tpe',
-        n_calls=20  # Мало iterations for примера
+        n_calls=20 # iterations for example
     )
     
     print("=== Results Optimization ===")
     print(f"Model: {result.model_name}")
     print(f"Best score: {result.best_score:.4f}")
-    print(f"Время optimization: {result.optimization_time:.2f}with")
+    print(f"Time optimization: {result.optimization_time:.2f}with")
     print(f"Best parameters: {result.best_params}")
     
-    # Optimization нескольких models
+    # Optimization several models
     models = ['random_forest', 'xgboost']
     results = optimizer.optimize_multiple_models(X, y, models, n_calls=10)
     

@@ -33,7 +33,7 @@ from ..utils.config_manager import AutoMLConfig
 
 
 class EnsembleMethod(Enum):
-    """Methods ансамблирования"""
+    """Methods ensembling"""
     VOTING = "voting"
     STACKING = "stacking"
     BLENDING = "blending"
@@ -43,7 +43,7 @@ class EnsembleMethod(Enum):
 
 @dataclass
 class EnsembleResult:
-    """Result построения ансамбля"""
+    """Result building ensemble"""
     ensembles: Dict[str, Any]
     ensemble_scores: Dict[str, float]
     best_ensemble_method: str
@@ -55,7 +55,7 @@ class EnsembleResult:
 
 
 class BaseEnsembleBuilder(ABC):
-    """Base класс for построителей ensembles -  pattern"""
+    """Base class for builders ensembles - pattern"""
     
     @abstractmethod
     def build(
@@ -65,12 +65,12 @@ class BaseEnsembleBuilder(ABC):
         models: Dict[str, Any],
         **kwargs
     ) -> Any:
-        """Построить ensemble"""
+        """Build ensemble"""
         pass
 
 
 class VotingEnsembleBuilder(BaseEnsembleBuilder):
-    """Строитель голосующего ансамбля"""
+    """Builder voting ensemble"""
     
     def __init__(self, voting_type: str = 'soft', weights: Optional[List[float]] = None):
         self.voting_type = voting_type
@@ -84,10 +84,10 @@ class VotingEnsembleBuilder(BaseEnsembleBuilder):
         task_type: str = 'regression',
         **kwargs
     ) -> Any:
-        """Построить голосующий ensemble"""
-        logger.info(f"🗳️ Build голосующего ансамбля ({self.voting_type})")
+        """Build ensemble"""
+        logger.info(f"🗳️ Build voting ensemble ({self.voting_type})")
         
-        # Подготовка models for ансамбля
+        # Preparation models for ensemble
         estimators = [(name, model) for name, model in models.items()]
         
         try:
@@ -103,20 +103,20 @@ class VotingEnsembleBuilder(BaseEnsembleBuilder):
                     weights=self.weights
                 )
             
-            # Training ансамбля
+            # Training ensemble
             ensemble.fit(X, y)
             
-            logger.info(f"✅ Голосующий ensemble построен with {len(models)} моделями")
+            logger.info(f"✅ Voting ensemble built with {len(models)} models")
             
             return ensemble
             
         except Exception as e:
-            logger.error(f"❌ Error построения голосующего ансамбля: {e}")
+            logger.error(f"❌ Error building voting ensemble: {e}")
             return None
 
 
 class StackingEnsembleBuilder(BaseEnsembleBuilder):
-    """Строитель стекинг ансамбля"""
+    """Builder stacking ensemble"""
     
     def __init__(
         self,
@@ -136,18 +136,18 @@ class StackingEnsembleBuilder(BaseEnsembleBuilder):
         task_type: str = 'regression',
         **kwargs
     ) -> Any:
-        """Построить стекинг ensemble"""
-        logger.info("🥞 Build стекинг ансамбля")
+        """Build stacking ensemble"""
+        logger.info("🥞 Build stacking ensemble")
         
         try:
-            # Configure meta-learning алгоритма by default
+            # Configure meta-learning algorithm by default
             if self.meta_learner is None:
                 if task_type == 'regression':
                     self.meta_learner = Ridge(alpha=1.0)
                 else:
                     self.meta_learner = LogisticRegression(max_iter=1000)
             
-            # Create стекинг ансамбля
+            # Create stacking ensemble
             from sklearn.ensemble import StackingRegressor, StackingClassifier
             
             estimators = [(name, model) for name, model in models.items()]
@@ -169,20 +169,20 @@ class StackingEnsembleBuilder(BaseEnsembleBuilder):
                     n_jobs=-1
                 )
             
-            # Training ансамбля
+            # Training ensemble
             ensemble.fit(X, y)
             
-            logger.info(f"✅ Стекинг ensemble построен with {len(models)} базовыми моделями")
+            logger.info(f"✅ Stacking ensemble built with {len(models)} base models")
             
             return ensemble
             
         except Exception as e:
-            logger.error(f"❌ Error построения стекинг ансамбля: {e}")
+            logger.error(f"❌ Error building stacking ensemble: {e}")
             return None
 
 
 class BlendingEnsembleBuilder(BaseEnsembleBuilder):
-    """Строитель блендинг ансамбля"""
+    """Builder blending ensemble"""
     
     def __init__(
         self,
@@ -202,13 +202,13 @@ class BlendingEnsembleBuilder(BaseEnsembleBuilder):
         task_type: str = 'regression',
         **kwargs
     ) -> Any:
-        """Построить блендинг ensemble"""
-        logger.info("🔀 Build блендинг ансамбля")
+        """Build blending ensemble"""
+        logger.info("🔀 Build blending ensemble")
         
         try:
             from sklearn.model_selection import train_test_split
             
-            # Split on training base models and блендинг
+            # Split on training base models and blending
             X_base, X_blend, y_base, y_blend = train_test_split(
                 X, y,
                 test_size=self.holdout_size,
@@ -220,22 +220,22 @@ class BlendingEnsembleBuilder(BaseEnsembleBuilder):
             blend_predictions = []
             
             for name, model in models.items():
-                # Create копии model for независимого training
+                # Create copies model for training
                 if hasattr(model, 'copy'):
                     trained_model = model.copy()
                 else:
                     from sklearn.base import clone
                     trained_model = clone(model)
                 
-                # Training on базовом наборе
+                # Training on base
                 trained_model.fit(X_base, y_base)
                 trained_models[name] = trained_model
                 
-                # Predictions on блендинг наборе
+                # Predictions on blending
                 predictions = trained_model.predict(X_blend)
                 blend_predictions.append(predictions)
             
-            # Подготовка data for meta-learning
+            # Preparation data for meta-learning
             blend_features = np.column_stack(blend_predictions)
             
             # Configure meta-algorithm by default
@@ -248,30 +248,30 @@ class BlendingEnsembleBuilder(BaseEnsembleBuilder):
             # Training meta-algorithm
             self.meta_learner.fit(blend_features, y_blend)
             
-            # Create финального ансамбля
+            # Create final ensemble
             ensemble = BlendingEnsemble(
                 base_models=trained_models,
                 meta_learner=self.meta_learner
             )
             
-            logger.info(f"✅ Блендинг ensemble построен with {len(models)} базовыми моделями")
+            logger.info(f"✅ Blending ensemble built with {len(models)} base models")
             
             return ensemble
             
         except Exception as e:
-            logger.error(f"❌ Error построения блендинг ансамбля: {e}")
+            logger.error(f"❌ Error building blending ensemble: {e}")
             return None
 
 
 class BlendingEnsemble(BaseEstimator, RegressorMixin):
-    """Кастомный блендинг ensemble"""
+    """Custom blending ensemble"""
     
     def __init__(self, base_models: Dict[str, Any], meta_learner: Any):
         self.base_models = base_models
         self.meta_learner = meta_learner
         
     def fit(self, X, y):
-        # Model already обучены in BlendingEnsembleBuilder
+        # Model already trained in BlendingEnsembleBuilder
         return self
         
     def predict(self, X):
@@ -281,17 +281,17 @@ class BlendingEnsemble(BaseEstimator, RegressorMixin):
             predictions = model.predict(X)
             base_predictions.append(predictions)
         
-        # Стекинг predictions
+        # Stacking predictions
         stacked_predictions = np.column_stack(base_predictions)
         
-        # Финальное prediction meta-algorithm
+        # Final prediction meta-algorithm
         final_predictions = self.meta_learner.predict(stacked_predictions)
         
         return final_predictions
 
 
 class DynamicWeightingEnsemble(BaseEstimator, RegressorMixin):
-    """Ensemble with динамическими weights"""
+    """Ensemble with dynamic weights"""
     
     def __init__(self, models: Dict[str, Any], window_size: int = 100):
         self.models = models
@@ -300,25 +300,25 @@ class DynamicWeightingEnsemble(BaseEstimator, RegressorMixin):
         self.performance_history = {name: [] for name in models.keys()}
         
     def fit(self, X, y):
-        # Training всех base models
+        # Training all base models
         for name, model in self.models.items():
             model.fit(X, y)
         
         return self
         
     def predict(self, X):
-        # Get predictions from всех models
+        # Get predictions from all models
         predictions = {}
         for name, model in self.models.items():
             predictions[name] = model.predict(X)
         
-        # If no истории, use equal weights
+        # If no history, use equal weights
         if not self.weights_history:
             weights = {name: 1.0 / len(self.models) for name in self.models.keys()}
         else:
             weights = self._calculate_dynamic_weights()
         
-        # Взвешенное усреднение predictions
+        # Weighted averaging predictions
         final_predictions = np.zeros(len(X))
         for name, weight in weights.items():
             final_predictions += weight * predictions[name]
@@ -326,14 +326,14 @@ class DynamicWeightingEnsemble(BaseEstimator, RegressorMixin):
         return final_predictions
     
     def _calculate_dynamic_weights(self):
-        """Computation динамических weights on основе недавней performance"""
-        # Упрощенная implementation - equal weights
+        """Computation dynamic weights on basis recent performance"""
+        # Simplified implementation - equal weights
         return {name: 1.0 / len(self.models) for name in self.models.keys()}
 
 
 class EnsembleBuilder:
     """
-    Главный класс for построения ensembles
+    Main class for building ensembles
     Implements enterprise patterns
     """
     
@@ -342,13 +342,13 @@ class EnsembleBuilder:
         self.ensemble_config = self.config.ensemble
         self.console = Console()
         
-        # Строители ensembles
+        # Builders ensembles
         self.ensemble_builders: Dict[str, BaseEnsembleBuilder] = {}
         self._setup_builders()
         
     def _setup_builders(self):
-        """Configure строителей ensembles"""
-        logger.info("🔧 Configure строителей ensembles...")
+        """Configure builders ensembles"""
+        logger.info("🔧 Configure builders ensembles...")
         
         if self.ensemble_config.enable_voting:
             self.ensemble_builders['voting'] = VotingEnsembleBuilder(
@@ -367,7 +367,7 @@ class EnsembleBuilder:
                 holdout_size=self.ensemble_config.blending_holdout_size
             )
         
-        logger.info(f"✅ Настроено {len(self.ensemble_builders)} строителей ensembles")
+        logger.info(f"✅ Configured {len(self.ensemble_builders)} builders ensembles")
     
     def build_ensemble(
         self,
@@ -378,28 +378,28 @@ class EnsembleBuilder:
         task_type: str = 'regression'
     ) -> EnsembleResult:
         """
-        Main method построения ensembles
+        Main method building ensembles
         
         Args:
             X: Matrix features
             y: Target variable
             models: Dictionary base models
-            ensemble_methods: Methods ансамблирования for use
-            task_type: Тип tasks (regression/classification)
+            ensemble_methods: Methods ensembling for use
+            task_type: Type tasks (regression/classification)
         """
         start_time = time.time()
         
-        logger.info(f"🤝 Launch построения ensembles with {len(models)} базовыми моделями")
+        logger.info(f"🤝 Launch building ensembles with {len(models)} base models")
         
         if ensemble_methods is None:
             ensemble_methods = list(self.ensemble_builders.keys())
         
-        # Ограничение number models in ансамбле
+        # Limitation number models in ensemble
         if len(models) > self.ensemble_config.ensemble_size_limit:
             # Sort models by performance and selection best
             sorted_models = self._rank_models_by_performance(X, y, models, task_type)
             models = dict(list(sorted_models.items())[:self.ensemble_config.ensemble_size_limit])
-            logger.info(f"📝 Ограничены up to {len(models)} best models for ансамбля")
+            logger.info(f"📝 Limited up to {len(models)} best models for ensemble")
         
         ensembles = {}
         ensemble_scores = {}
@@ -422,11 +422,11 @@ class EnsembleBuilder:
                 progress.update(task, description=f"Method: {method}")
                 
                 if method not in self.ensemble_builders:
-                    logger.warning(f"⚠️ Неизвестный method ансамблирования: {method}")
+                    logger.warning(f"⚠️ Unknown method ensembling: {method}")
                     continue
                 
                 try:
-                    # Build ансамбля
+                    # Build ensemble
                     ensemble = self.ensemble_builders[method].build(
                         X, y, models, task_type=task_type
                     )
@@ -434,11 +434,11 @@ class EnsembleBuilder:
                     if ensemble is not None:
                         ensembles[method] = ensemble
                         
-                        # Evaluate ансамбля
+                        # Evaluate ensemble
                         score = self._evaluate_ensemble(X, y, ensemble, task_type)
                         ensemble_scores[method] = score
                         
-                        # Get weights (if применимо)
+                        # Get weights (if applicable)
                         weights = self._extract_ensemble_weights(ensemble, method)
                         if weights:
                             ensemble_weights[method] = weights
@@ -446,18 +446,18 @@ class EnsembleBuilder:
                         logger.info(f"✅ {method} ensemble: score {score:.4f}")
                 
                 except Exception as e:
-                    logger.error(f"❌ Error построения {method} ансамбля: {e}")
+                    logger.error(f"❌ Error building {method} ensemble: {e}")
                 
                 progress.advance(task)
         
-        # Determine лучшего ансамбля
+        # Determine best ensemble
         if ensemble_scores:
             best_method = max(ensemble_scores.keys(), key=lambda k: ensemble_scores[k])
             best_score = ensemble_scores[best_method]
         else:
             best_method = "none"
             best_score = 0.0
-            logger.warning("⚠️ Ни one ensemble not был успешно построен")
+            logger.warning("⚠️ one ensemble not was successfully built")
         
         build_time = time.time() - start_time
         
@@ -477,10 +477,10 @@ class EnsembleBuilder:
             build_time=build_time
         )
         
-        # Вывод results
+        # Output results
         self._print_ensemble_results(result)
         
-        logger.info(f"✅ Build ensembles завершено for {build_time:.2f}with")
+        logger.info(f"✅ Build ensembles completed for {build_time:.2f}with")
         
         return result
     
@@ -507,7 +507,7 @@ class EnsembleBuilder:
                 model_scores[name] = np.mean(scores)
                 
             except Exception as e:
-                logger.warning(f"⚠️ Error оценки model {name}: {e}")
+                logger.warning(f"⚠️ Error evaluation model {name}: {e}")
                 model_scores[name] = 0.0
         
         # Sort by descending score
@@ -539,7 +539,7 @@ class EnsembleBuilder:
                 base_scores[name] = np.mean(scores)
                 
             except Exception as e:
-                logger.warning(f"⚠️ Error оценки base model {name}: {e}")
+                logger.warning(f"⚠️ Error evaluation base model {name}: {e}")
                 base_scores[name] = 0.0
         
         return base_scores
@@ -551,7 +551,7 @@ class EnsembleBuilder:
         ensemble: Any,
         task_type: str
     ) -> float:
-        """Evaluate ансамбля"""
+        """Evaluate ensemble"""
         try:
             if task_type == 'regression':
                 scores = cross_val_score(ensemble, X, y, cv=3, scoring='r2', n_jobs=-1)
@@ -561,11 +561,11 @@ class EnsembleBuilder:
             return np.mean(scores)
             
         except Exception as e:
-            logger.error(f"❌ Error оценки ансамбля: {e}")
+            logger.error(f"❌ Error evaluation ensemble: {e}")
             return 0.0
     
     def _extract_ensemble_weights(self, ensemble: Any, method: str) -> Optional[Dict[str, float]]:
-        """Извлечение weights ансамбля"""
+        """Extraction weights ensemble"""
         try:
             if method == 'voting' and hasattr(ensemble, 'estimators_'):
                 if hasattr(ensemble, 'weights') and ensemble.weights is not None:
@@ -582,20 +582,20 @@ class EnsembleBuilder:
             return None
             
         except Exception as e:
-            logger.debug(f"Not удалось извлечь weights for {method}: {e}")
+            logger.debug(f"Not succeeded extract weights for {method}: {e}")
             return None
     
     def _print_ensemble_results(self, result: EnsembleResult):
-        """Вывод results ансамблирования"""
+        """Output results ensembling"""
         
-        # Таблица with результатами ensembles
-        table = Table(title="🤝 Results АНСАМБЛИРОВАНИЯ")
+        # Table with ensembles
+        table = Table(title="🤝 Results ENSEMBLING")
         
         table.add_column("Method", style="cyan", no_wrap=True)
         table.add_column("Score", style="green")
-        table.add_column("Улучшение", style="magenta")
+        table.add_column("Improvement", style="magenta")
         
-        # Best base score for сравнения
+        # Best base score for comparison
         best_base_score = max(result.base_model_scores.values()) if result.base_model_scores else 0.0
         
         for method, score in sorted(result.ensemble_scores.items(), key=lambda x: x[1], reverse=True):
@@ -608,12 +608,12 @@ class EnsembleBuilder:
         
         self.console.print(table)
         
-        # Информация о лучшем ансамбле
+        # Information best ensemble
         if result.best_ensemble_method != "none":
             best_info = f"""
 🏆 Best ensemble: {result.best_ensemble_method}
 📊 Score: {result.best_ensemble_score:.4f}
-⏱️ Время построения: {result.build_time:.2f}with
+⏱️ Time building: {result.build_time:.2f}with
 🔢 Base models: {result.ensemble_metadata['base_models_count']}
 """
             self.console.print(best_info)
@@ -623,11 +623,11 @@ class EnsembleBuilder:
         result: EnsembleResult,
         save_path: Optional[str] = None
     ):
-        """Visualization сравнения ensembles"""
+        """Visualization comparison ensembles"""
         try:
             fig, axes = plt.subplots(1, 2, figsize=(15, 6))
             
-            # График 1: Сравнение scores
+            # Chart 1: Comparison scores
             all_scores = {**result.base_model_scores, **result.ensemble_scores}
             sorted_scores = sorted(all_scores.items(), key=lambda x: x[1], reverse=True)
             
@@ -636,15 +636,15 @@ class EnsembleBuilder:
             
             axes[0].barh(methods, scores, color=colors, alpha=0.7)
             axes[0].set_xlabel('Score')
-            axes[0].set_title('Сравнение base models and ensembles')
+            axes[0].set_title('Comparison base models and ensembles')
             axes[0].grid(True, alpha=0.3)
             
-            # Легенда
+            # Legend
             axes[0].axvline(x=0, color='blue', alpha=0.7, label='Base model')
             axes[0].axvline(x=0, color='red', alpha=0.7, label='Ensembles')
             axes[0].legend()
             
-            # График 2: Улучшения from ансамблирования
+            # Chart 2: Improvements from ensembling
             if result.ensemble_scores and result.base_model_scores:
                 best_base_score = max(result.base_model_scores.values())
                 
@@ -658,8 +658,8 @@ class EnsembleBuilder:
                     colors = ['green' if imp > 0 else 'orange' for imp in improve_values]
                     
                     axes[1].bar(methods, improve_values, color=colors, alpha=0.7)
-                    axes[1].set_ylabel('Улучшение (%)')
-                    axes[1].set_title('Улучшение from ансамблирования')
+                    axes[1].set_ylabel('Improvement (%)')
+                    axes[1].set_title('Improvement from ensembling')
                     axes[1].axhline(y=0, color='black', linestyle='--', alpha=0.5)
                     axes[1].grid(True, alpha=0.3)
             
@@ -667,22 +667,22 @@ class EnsembleBuilder:
             
             if save_path:
                 plt.savefig(save_path, dpi=300, bbox_inches='tight')
-                logger.info(f"📊 График ensembles сохранен: {save_path}")
+                logger.info(f"📊 Chart ensembles saved: {save_path}")
             else:
                 plt.show()
                 
         except Exception as e:
-            logger.error(f"❌ Error creation графика ensembles: {e}")
+            logger.error(f"❌ Error creation ensembles: {e}")
     
     def get_ensemble_report(self, result: EnsembleResult) -> str:
-        """Create отчета by ансамблированию"""
+        """Create report by ensembling"""
         
         report = f"""
-=== ОТЧЕТ By АНСАМБЛИРОВАНИЮ ===
+=== REPORT By ENSEMBLING ===
 
 Base models: {len(result.base_model_scores)}
-Methods ансамблирования: {len(result.ensemble_scores)}
-Время построения: {result.build_time:.2f}with
+Methods ensembling: {len(result.ensemble_scores)}
+Time building: {result.build_time:.2f}with
 
 Best ensemble: {result.best_ensemble_method}
 Best score: {result.best_ensemble_score:.4f}
@@ -695,19 +695,19 @@ Results ensembles:
         
         # Weights ensembles
         if result.ensemble_weights:
-            report += "\nWeights in ансамблях:\n"
+            report += "\nWeights in :\n"
             for method, weights in result.ensemble_weights.items():
                 report += f"  {method}:\n"
                 for model, weight in weights.items():
                     report += f"    {model}: {weight:.3f}\n"
         
-        report += f"\nМетаданные: {result.ensemble_metadata}"
+        report += f"\nMetadata: {result.ensemble_metadata}"
         
         return report
 
 
 if __name__ == "__main__":
-    # Пример use EnsembleBuilder
+    # Example use EnsembleBuilder
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.linear_model import Ridge
     import xgboost as xgb
@@ -732,7 +732,7 @@ if __name__ == "__main__":
         'xgboost': xgb.XGBRegressor(n_estimators=50, random_state=42)
     }
     
-    # Create строителя ensembles
+    # Create builder ensembles
     config = AutoMLConfig()
     builder = EnsembleBuilder(config)
     
@@ -743,10 +743,10 @@ if __name__ == "__main__":
         task_type='regression'
     )
     
-    print("=== Results АНСАМБЛИРОВАНИЯ ===")
+    print("=== Results ENSEMBLING ===")
     print(f"Best ensemble: {result.best_ensemble_method}")
     print(f"Best score: {result.best_ensemble_score:.4f}")
-    print(f"Время построения: {result.build_time:.2f}with")
+    print(f"Time building: {result.build_time:.2f}with")
     
-    # Отчет
+    # Report
     print(builder.get_ensemble_report(result))

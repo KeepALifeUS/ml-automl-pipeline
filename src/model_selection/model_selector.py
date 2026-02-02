@@ -44,7 +44,7 @@ from ..utils.config_manager import AutoMLConfig
 
 
 class TaskType(Enum):
-    """Типы tasks машинного training"""
+    """Types tasks machine training"""
     REGRESSION = "regression"
     BINARY_CLASSIFICATION = "binary_classification"
     MULTICLASS_CLASSIFICATION = "multiclass_classification"
@@ -52,7 +52,7 @@ class TaskType(Enum):
 
 @dataclass
 class ModelSelectionResult:
-    """Result отбора models"""
+    """Result selection models"""
     model_scores: Dict[str, float]
     best_models: List[str]
     evaluation_metadata: Dict[str, Any]
@@ -62,24 +62,24 @@ class ModelSelectionResult:
 
 
 class BaseModelProvider(ABC):
-    """Base класс for провайдеров models -  pattern"""
+    """Base class for providers models - pattern"""
     
     @abstractmethod
     def get_models(self, task_type: TaskType) -> Dict[str, Any]:
-        """Получить model for tasks"""
+        """ model for tasks"""
         pass
     
     @abstractmethod
     def get_default_params(self, model_name: str) -> Dict[str, Any]:
-        """Получить parameters by default for model"""
+        """ parameters by default for model"""
         pass
 
 
 class SklearnModelProvider(BaseModelProvider):
-    """Провайдер models scikit-learn"""
+    """Provider models scikit-learn"""
     
     def get_models(self, task_type: TaskType) -> Dict[str, Any]:
-        """Получить model scikit-learn"""
+        """ model scikit-learn"""
         if task_type == TaskType.REGRESSION:
             return {
                 'linear_regression': LinearRegression(),
@@ -122,10 +122,10 @@ class SklearnModelProvider(BaseModelProvider):
 
 
 class GradientBoostingModelProvider(BaseModelProvider):
-    """Провайдер models градиентного бустинга"""
+    """Provider models gradient boosting"""
     
     def get_models(self, task_type: TaskType) -> Dict[str, Any]:
-        """Получить model градиентного бустинга"""
+        """ model gradient boosting"""
         if task_type == TaskType.REGRESSION:
             return {
                 'xgboost': xgb.XGBRegressor(
@@ -152,7 +152,7 @@ class GradientBoostingModelProvider(BaseModelProvider):
             }
     
     def get_default_params(self, model_name: str) -> Dict[str, Any]:
-        """Parameters by default for градиентного бустинга"""
+        """Parameters by default for gradient boosting"""
         default_params = {
             'xgboost': {
                 'n_estimators': 100,
@@ -179,7 +179,7 @@ class GradientBoostingModelProvider(BaseModelProvider):
 
 class ModelSelector:
     """
-    Продвинутый селектор models for crypto trading
+    Advanced selector models for crypto trading
     Implements enterprise patterns
     """
     
@@ -190,16 +190,16 @@ class ModelSelector:
         self._setup_providers()
         
     def _setup_providers(self):
-        """Configure провайдеров models"""
-        logger.info("🔧 Configure провайдеров models...")
+        """Configure providers models"""
+        logger.info("🔧 Configure providers models...")
         
         self.model_providers['sklearn'] = SklearnModelProvider()
         self.model_providers['gradient_boosting'] = GradientBoostingModelProvider()
         
-        logger.info(f"✅ Настроено {len(self.model_providers)} провайдеров")
+        logger.info(f"✅ Configured {len(self.model_providers)} providers")
     
     def _detect_task_type(self, y: pd.Series) -> TaskType:
-        """Determine типа tasks"""
+        """Determine type tasks"""
         unique_values = y.nunique()
         
         if y.dtype in ['float64', 'float32'] or unique_values > 20:
@@ -210,7 +210,7 @@ class ModelSelector:
             return TaskType.MULTICLASS_CLASSIFICATION
     
     def _get_scoring_metric(self, task_type: TaskType) -> str:
-        """Get metrics for скоринга"""
+        """Get metrics for scoring"""
         if task_type == TaskType.REGRESSION:
             return 'neg_mean_squared_error'
         elif task_type == TaskType.BINARY_CLASSIFICATION:
@@ -219,13 +219,13 @@ class ModelSelector:
             return 'f1_macro'
     
     def _get_all_models(self, task_type: TaskType, models: Optional[List[str]] = None) -> Dict[str, Any]:
-        """Get всех доступных models"""
+        """Get all available models"""
         all_models = {}
         
         for provider_name, provider in self.model_providers.items():
             provider_models = provider.get_models(task_type)
             
-            # Фильтрация models if указаны конкретные
+            # models if specified specific
             if models:
                 provider_models = {
                     name: model for name, model in provider_models.items()
@@ -252,21 +252,21 @@ class ModelSelector:
         Args:
             X: Matrix features
             y: Target variable
-            models: Список models for testing
+            models: List models for testing
             cv_folds: Number folds for cross-validation
-            scoring: Метрика скоринга
-            time_series_split: Использовать временное split
-            top_k: Number best models for возврата
+            scoring: Metric scoring
+            time_series_split: Use split
+            top_k: Number best models for return
         """
         start_time = time.time()
         
-        logger.info("🤖 Launch отбора models...")
+        logger.info("🤖 Launch selection models...")
         
-        # Determine типа tasks
+        # Determine type tasks
         task_type = self._detect_task_type(y)
-        logger.info(f"🎯 Тип tasks: {task_type.value}")
+        logger.info(f"🎯 Type tasks: {task_type.value}")
         
-        # Get metrics скоринга
+        # Get metrics scoring
         if scoring is None:
             scoring = self._get_scoring_metric(task_type)
         
@@ -314,7 +314,7 @@ class ModelSelector:
                 progress.update(task, description=f"Model: {model_name}")
                 
                 try:
-                    # Подготовка data
+                    # Preparation data
                     X_clean = X.fillna(0).replace([np.inf, -np.inf], 0)
                     y_clean = y.fillna(y.mean()) if y.isna().any() else y
                     
@@ -335,7 +335,7 @@ class ModelSelector:
                     
                 except Exception as e:
                     logger.warning(f"⚠️ Error in model {model_name}: {e}")
-                    model_scores[model_name] = float('-inf')  # Плохой score
+                    model_scores[model_name] = float('-inf') # Bad score
                     cv_results[model_name] = []
                 
                 progress.advance(task)
@@ -344,14 +344,14 @@ class ModelSelector:
         sorted_models = sorted(
             model_scores.items(),
             key=lambda x: x[1],
-            reverse=True  # For большинства metrics больше = лучше
+            reverse=True # For majority metrics more = better
         )
         
-        # Коррекция for metrics где меньше = лучше (например, MSE)
+        # Correction for metrics where less = better (for example, MSE)
         if scoring.startswith('neg_'):
             sorted_models = sorted(
                 model_scores.items(),
-                key=lambda x: -x[1],  # Инвертируем for neg_ metrics
+                key=lambda x: -x[1], # for neg_ metrics
                 reverse=True
             )
         
@@ -374,20 +374,20 @@ class ModelSelector:
             cv_results=cv_results
         )
         
-        # Вывод results
+        # Output results
         self._print_results(result)
         
-        logger.info(f"✅ Select models завершен for {selection_time:.2f}with")
+        logger.info(f"✅ Select models completed for {selection_time:.2f}with")
         
         return result
     
     def _print_results(self, result: ModelSelectionResult):
-        """Вывод results отбора models"""
+        """Output results selection models"""
         
-        # Create таблицы with результатами
-        table = Table(title="🏆 Results ОТБОРА Models")
+        # Create table with
+        table = Table(title="🏆 Results SELECTION Models")
         
-        table.add_column("Ранг", style="cyan", no_wrap=True)
+        table.add_column("Rank", style="cyan", no_wrap=True)
         table.add_column("Model", style="magenta")
         table.add_column("Score", style="green")
         table.add_column("Std", style="yellow")
@@ -421,9 +421,9 @@ class ModelSelector:
         top_n: int = 10,
         save_path: Optional[str] = None
     ):
-        """Visualization сравнения models"""
+        """Visualization comparison models"""
         try:
-            # Топ N models
+            # Top N models
             sorted_models = sorted(
                 result.model_scores.items(),
                 key=lambda x: x[1],
@@ -432,23 +432,23 @@ class ModelSelector:
             
             models, scores = zip(*sorted_models)
             
-            # График scores
+            # Chart scores
             plt.figure(figsize=(12, 8))
             
-            # Main график
+            # Main chart
             plt.subplot(2, 1, 1)
             bars = plt.barh(models, scores, color='skyblue', alpha=0.7)
             plt.xlabel('Score model')
-            plt.title(f'Сравнение топ {top_n} models')
+            plt.title(f'Comparison top {top_n} models')
             plt.grid(True, alpha=0.3)
             
-            # Add values on столбцы
+            # Add values on columns
             for i, bar in enumerate(bars):
                 width = bar.get_width()
                 plt.text(width, bar.get_y() + bar.get_height()/2,
                         f'{width:.4f}', ha='left', va='center')
             
-            # Box plot for топ-5 models with CV результатами
+            # Box plot for top-5 models with CV
             plt.subplot(2, 1, 2)
             top_5_models = [m for m in models[:5] if m in result.cv_results and result.cv_results[m]]
             
@@ -457,19 +457,19 @@ class ModelSelector:
                 plt.boxplot(cv_data, labels=top_5_models)
                 plt.xticks(rotation=45, ha='right')
                 plt.ylabel('CV Score')
-                plt.title('Распределение CV scores for топ-5 models')
+                plt.title('Distribution CV scores for top-5 models')
                 plt.grid(True, alpha=0.3)
             
             plt.tight_layout()
             
             if save_path:
                 plt.savefig(save_path, dpi=300, bbox_inches='tight')
-                logger.info(f"📊 График сохранен: {save_path}")
+                logger.info(f"📊 Chart saved: {save_path}")
             else:
                 plt.show()
                 
         except Exception as e:
-            logger.error(f"❌ Error creation графика: {e}")
+            logger.error(f"❌ Error creation : {e}")
     
     def get_model_recommendations(
         self,
@@ -477,34 +477,34 @@ class ModelSelector:
         data_size: int,
         feature_count: int
     ) -> Dict[str, str]:
-        """Get рекомендаций by выбору models"""
+        """Get recommendations by selection models"""
         
         recommendations = {}
         
-        # Рекомендации on основе размера data
+        # Recommendations on basis size data
         if data_size < 1000:
-            recommendations['data_size'] = "Небольшой dataset: recommended simple model (Linear, Ridge, Lasso)"
+            recommendations['data_size'] = "Small dataset: recommended simple model (Linear, Ridge, Lasso)"
         elif data_size < 10000:
-            recommendations['data_size'] = "Average dataset: подходят Random Forest, Gradient Boosting"
+            recommendations['data_size'] = "Average dataset: are suitable Random Forest, Gradient Boosting"
         else:
-            recommendations['data_size'] = "Большой dataset: effective XGBoost, LightGBM, CatBoost"
+            recommendations['data_size'] = "Large dataset: effective XGBoost, LightGBM, CatBoost"
         
-        # Рекомендации on основе number features
+        # Recommendations on basis number features
         if feature_count < 10:
-            recommendations['features'] = "Мало features: simple model могут be more effective"
+            recommendations['features'] = " features: simple model can be more effective"
         elif feature_count < 100:
-            recommendations['features'] = "Умеренное number features: подходят ensembles"
+            recommendations['features'] = "Moderate number features: are suitable ensembles"
         else:
-            recommendations['features'] = "Много features: recommended regularization (Ridge, Lasso)"
+            recommendations['features'] = "Many features: recommended regularization (Ridge, Lasso)"
         
-        # Рекомендации on основе типа tasks
+        # Recommendations on basis type tasks
         task_type = result.task_type
         if task_type == 'regression':
-            recommendations['task'] = "Regression: обратите attention on MSE and R² metrics"
+            recommendations['task'] = "Regression: note attention on MSE and R² metrics"
         else:
-            recommendations['task'] = "Classification: важны precision, recall and F1-score"
+            recommendations['task'] = "Classification: precision, recall and F1-score"
         
-        # Топ model
+        # Top model
         if result.best_models:
             best_model = result.best_models[0]
             best_score = result.model_scores[best_model]
@@ -513,17 +513,17 @@ class ModelSelector:
         return recommendations
     
     def get_selection_report(self, result: ModelSelectionResult) -> str:
-        """Create отчета by отбору models"""
+        """Create report by models"""
         
         report = f"""
-=== ОТЧЕТ By ОТБОРУ Models ===
+=== REPORT By SELECTION Models ===
 
-Тип tasks: {result.task_type}
-Время отбора: {result.selection_time:.2f}with
+Type tasks: {result.task_type}
+Time selection: {result.selection_time:.2f}with
 Tested models: {len(result.model_scores)}
-Успешных models: {result.evaluation_metadata.get('successful_models', 0)}
+Successful models: {result.evaluation_metadata.get('successful_models', 0)}
 
-Топ-5 models:
+Top-5 models:
 """
         
         sorted_models = sorted(
@@ -539,13 +539,13 @@ Tested models: {len(result.model_scores)}
             else:
                 report += f"{i}. {model_name}: {score:.4f}\n"
         
-        report += f"\nМетаданные: {result.evaluation_metadata}"
+        report += f"\nMetadata: {result.evaluation_metadata}"
         
         return report
 
 
 if __name__ == "__main__":
-    # Пример use
+    # Example use
     from ..utils.config_manager import AutoMLConfig
     
     # Create test data
@@ -565,12 +565,12 @@ if __name__ == "__main__":
     # Classification
     y_clf = pd.Series((y_reg > y_reg.median()).astype(int))
     
-    # Create селектора
+    # Create selector
     config = AutoMLConfig()
     selector = ModelSelector(config)
     
-    # Testing регрессии
-    print("=== Testing РЕГРЕССИИ ===")
+    # Testing regression
+    print("=== Testing REGRESSION ===")
     result_reg = selector.select_best_models(
         X, y_reg,
         models=['linear_regression', 'ridge', 'random_forest', 'xgboost'],
@@ -580,8 +580,8 @@ if __name__ == "__main__":
     
     print(selector.get_selection_report(result_reg))
     
-    # Testing классификации
-    print("\n=== Testing КЛАССИФИКАЦИИ ===")
+    # Testing classification
+    print("\n=== Testing CLASSIFICATION ===")
     result_clf = selector.select_best_models(
         X, y_clf,
         models=['logistic_regression', 'random_forest', 'xgboost'],
@@ -591,8 +591,8 @@ if __name__ == "__main__":
     
     print(selector.get_selection_report(result_clf))
     
-    # Рекомендации
-    print("\n=== РЕКОМЕНДАЦИИ ===")
+    # Recommendations
+    print("\n=== RECOMMENDATIONS ===")
     recommendations = selector.get_model_recommendations(
         result_reg, data_size=len(X), feature_count=len(X.columns)
     )

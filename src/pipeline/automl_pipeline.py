@@ -68,7 +68,7 @@ class PipelineResult:
 
 class AutoMLPipeline:
     """
-    Главный класс AutoML pipeline for crypto trading
+    Main class AutoML pipeline for crypto trading
     Implements enterprise patterns for scalable ML systems
     """
     
@@ -86,7 +86,7 @@ class AutoMLPipeline:
         self.ensemble_builder = EnsembleBuilder(self.config)
         self.evaluator = ModelEvaluator(self.config)
         
-        # Состояние pipeline
+        # State pipeline
         self.pipeline_state = {}
         self.console = Console()
         
@@ -102,22 +102,22 @@ class AutoMLPipeline:
         stages: Optional[List[str]] = None
     ) -> PipelineResult:
         """
-        Launch полного AutoML pipeline
+        Launch full AutoML pipeline
         
         Args:
-            data: Исходные data
-            target_column: Название columns with target variable
+            data: Source data
+            target_column: Name columns with target variable
             test_size: Size test set
-            validation_size: Size валидационной set
-            time_series_split: Использовать temporal разбиения
-            stages: Список stages for execution (by default all)
+            validation_size: Size validation set
+            time_series_split: Use temporal splitting
+            stages: List stages for execution (by default all)
         """
         start_time = time.time()
         
         self.console.print(
             Panel.fit(
                 "🤖 [bold blue]CRYPTO TRADING AUTOML PIPELINE v5.0[/bold blue] 🚀\n"
-                f"📊 Data: {len(data)} записей, {len(data.columns)} features\n"
+                f"📊 Data: {len(data)} records, {len(data.columns)} features\n"
                 f"🎯 Target variable: {target_column}",
                 title="Launch AutoML Pipeline"
             )
@@ -146,9 +146,9 @@ class AutoMLPipeline:
                 
                 stages_completed.append(PipelineStage.DATA_PREPROCESSING.value)
                 
-                self.console.print("✅ [green]Preprocessing data завершена[/green]")
+                self.console.print("✅ [green]Preprocessing data completed[/green]")
             else:
-                logger.info("⏭️ Пропуск предобработки data")
+                logger.info("⏭️ Skipping preprocessing data")
                 X = data.drop(columns=[target_column])
                 y = data[target_column]
                 X_train, X_test, y_train, y_test = train_test_split(
@@ -163,7 +163,7 @@ class AutoMLPipeline:
                 feature_generation_result = self._generate_features(X_train)
                 
                 if feature_generation_result and not feature_generation_result.features.empty:
-                    # Apply сгенерированных features to training set
+                    # Apply generated features to training set
                     X_train_enhanced = pd.concat([X_train, feature_generation_result.features], axis=1)
                     
                     # Apply to test set
@@ -174,7 +174,7 @@ class AutoMLPipeline:
                     X_test = X_test_enhanced
                 
                 stages_completed.append(PipelineStage.FEATURE_GENERATION.value)
-                self.console.print("✅ [green]Generation features завершена[/green]")
+                self.console.print("✅ [green]Generation features completed[/green]")
             
             # === Stage 3: Selection Features ===
             feature_selection_result = None
@@ -188,7 +188,7 @@ class AutoMLPipeline:
                     X_test = X_test[feature_selection_result.selected_features]
                 
                 stages_completed.append(PipelineStage.FEATURE_SELECTION.value)
-                self.console.print("✅ [green]Select features завершен[/green]")
+                self.console.print("✅ [green]Select features completed[/green]")
             
             # === Stage 4: Selection Models ===
             model_selection_result = None
@@ -198,7 +198,7 @@ class AutoMLPipeline:
                 model_selection_result = self._select_models(X_train, y_train)
                 
                 stages_completed.append(PipelineStage.MODEL_SELECTION.value)
-                self.console.print("✅ [green]Select models завершен[/green]")
+                self.console.print("✅ [green]Select models completed[/green]")
             
             # === Stage 5: Optimization Hyperparameters ===
             optimization_results = {}
@@ -208,7 +208,7 @@ class AutoMLPipeline:
                 # Determine models for optimization
                 models_to_optimize = []
                 if model_selection_result:
-                    # Take топ-3 model
+                    # Take top-3 model
                     sorted_models = sorted(
                         model_selection_result.model_scores.items(),
                         key=lambda x: x[1],
@@ -224,19 +224,19 @@ class AutoMLPipeline:
                 )
                 
                 stages_completed.append(PipelineStage.HYPERPARAMETER_OPTIMIZATION.value)
-                self.console.print("✅ [green]Optimization hyperparameters завершена[/green]")
+                self.console.print("✅ [green]Optimization hyperparameters completed[/green]")
             
-            # === Stage 6: Construction АНСАМБЛЯ ===
+            # === Stage 6: Construction ENSEMBLE ===
             ensemble_result = None
             if PipelineStage.ENSEMBLE_BUILDING.value in stages:
-                logger.info("🤝 Stage 6: Build ансамбля")
+                logger.info("🤝 Stage 6: Build ensemble")
                 
                 ensemble_result = self._build_ensemble(
                     X_train, y_train, optimization_results
                 )
                 
                 stages_completed.append(PipelineStage.ENSEMBLE_BUILDING.value)
-                self.console.print("✅ [green]Build ансамбля завершено[/green]")
+                self.console.print("✅ [green]Build ensemble completed[/green]")
             
             # === Stage 7: Evaluation Models ===
             evaluation_result = None
@@ -254,9 +254,9 @@ class AutoMLPipeline:
                 )
                 
                 stages_completed.append(PipelineStage.MODEL_EVALUATION.value)
-                self.console.print("✅ [green]Evaluate models завершена[/green]")
+                self.console.print("✅ [green]Evaluate models completed[/green]")
             
-            # === Creation ИТОГОВОГО РЕЗУЛЬТАТА ===
+            # === Creation FINAL RESULT ===
             total_time = time.time() - start_time
             pipeline_metadata.update({
                 'end_time': time.time(),
@@ -281,10 +281,10 @@ class AutoMLPipeline:
             # Save results
             self._save_pipeline_results(result)
             
-            # Финальный отчет
+            # Final report
             self._print_final_report(result)
             
-            logger.info(f"🎉 AutoML Pipeline завершен for {total_time:.2f}with")
+            logger.info(f"🎉 AutoML Pipeline completed for {total_time:.2f}with")
             
             return result
             
@@ -300,11 +300,11 @@ class AutoMLPipeline:
         X = data.drop(columns=[target_column])
         y = data[target_column]
         
-        # Preprocessing with помощью DataPreprocessor
+        # Preprocessing with DataPreprocessor
         X_processed = self.preprocessor.preprocess(X)
         y_processed = self.preprocessor.preprocess_target(y)
         
-        logger.info(f"✅ Data обработаны: {X_processed.shape[0]} записей, {X_processed.shape[1]} features")
+        logger.info(f"✅ Data processed: {X_processed.shape[0]} records, {X_processed.shape[1]} features")
         
         return X_processed, y_processed
     
@@ -320,7 +320,7 @@ class AutoMLPipeline:
         logger.info("✂️ Split data...")
         
         if time_series_split:
-            # Временное split (without перемешивания)
+            # Temporal split (without shuffling)
             split_idx = int(len(X) * (1 - test_size))
             X_train = X.iloc[:split_idx]
             X_test = X.iloc[split_idx:]
@@ -332,7 +332,7 @@ class AutoMLPipeline:
                 X, y, test_size=test_size, random_state=42
             )
         
-        logger.info(f"✅ Data разделены: training={len(X_train)}, test={len(X_test)}")
+        logger.info(f"✅ Data split: training={len(X_train)}, test={len(X_test)}")
         
         return X_train, X_test, y_train, y_test
     
@@ -343,12 +343,12 @@ class AutoMLPipeline:
         try:
             result = self.feature_generator.generate_features(X, parallel=True)
             
-            logger.info(f"✅ Сгенерировано {len(result.feature_names)} features")
+            logger.info(f"✅ Generated {len(result.feature_names)} features")
             
             return result
             
         except Exception as e:
-            logger.error(f"❌ Error генерации features: {e}")
+            logger.error(f"❌ Error generation features: {e}")
             return None
     
     def _select_features(
@@ -365,12 +365,12 @@ class AutoMLPipeline:
                 ensemble_selection=True
             )
             
-            logger.info(f"✅ Отобрано {len(result.selected_features)} features")
+            logger.info(f"✅ {len(result.selected_features)} features")
             
             return result
             
         except Exception as e:
-            logger.error(f"❌ Error отбора features: {e}")
+            logger.error(f"❌ Error selection features: {e}")
             return None
     
     def _select_models(self, X: pd.DataFrame, y: pd.Series) -> Optional[ModelSelectionResult]:
@@ -381,7 +381,7 @@ class AutoMLPipeline:
             result = self.model_selector.select_best_models(
                 X, y,
                 models=['xgboost', 'random_forest', 'lightgbm', 'ridge', 'elasticnet'],
-                cv_folds=3  # Меньше folds for speed
+                cv_folds=3 # Fewer folds for speed
             )
             
             logger.info(f"✅ Tested {len(result.model_scores)} models")
@@ -389,7 +389,7 @@ class AutoMLPipeline:
             return result
             
         except Exception as e:
-            logger.error(f"❌ Error отбора models: {e}")
+            logger.error(f"❌ Error selection models: {e}")
             return None
     
     def _optimize_hyperparameters(
@@ -406,10 +406,10 @@ class AutoMLPipeline:
                 X, y,
                 models=models,
                 optimizer_method='optuna_tpe',
-                n_calls=50  # Меньше iterations for speed
+                n_calls=50 # Fewer iterations for speed
             )
             
-            logger.info(f"✅ Оптимизированы hyperparameters for {len(results)} models")
+            logger.info(f"✅ Optimized hyperparameters for {len(results)} models")
             
             return results
             
@@ -423,8 +423,8 @@ class AutoMLPipeline:
         y: pd.Series,
         optimization_results: Dict[str, OptimizationResult]
     ) -> Optional[EnsembleResult]:
-        """Build ансамбля"""
-        logger.info("🤝 Build ансамбля...")
+        """Build ensemble"""
+        logger.info("🤝 Build ensemble...")
         
         try:
             # Create models with optimal parameters
@@ -434,7 +434,7 @@ class AutoMLPipeline:
                 models[model_name] = model
             
             if not models:
-                logger.warning("⚠️ No models for ансамбля")
+                logger.warning("⚠️ No models for ensemble")
                 return None
             
             result = self.ensemble_builder.build_ensemble(
@@ -443,12 +443,12 @@ class AutoMLPipeline:
                 ensemble_methods=['voting', 'stacking']
             )
             
-            logger.info(f"✅ Ensemble построен with {len(models)} моделями")
+            logger.info(f"✅ Ensemble built with {len(models)} models")
             
             return result
             
         except Exception as e:
-            logger.error(f"❌ Error построения ансамбля: {e}")
+            logger.error(f"❌ Error building ensemble: {e}")
             return None
     
     def _select_best_model(
@@ -463,7 +463,7 @@ class AutoMLPipeline:
         best_model_name = "unknown"
         best_score = float('inf')
         
-        # Check оптимизированных models
+        # Check optimized models
         for model_name, result in optimization_results.items():
             if result.best_score < best_score:
                 best_score = result.best_score
@@ -472,7 +472,7 @@ class AutoMLPipeline:
                     model_name, result.best_params
                 )
         
-        # Check ансамбля
+        # Check ensemble
         if ensemble_result and ensemble_result.best_ensemble_score < best_score:
             best_score = ensemble_result.best_ensemble_score
             best_model_name = f"ensemble_{ensemble_result.best_ensemble_method}"
@@ -509,12 +509,12 @@ class AutoMLPipeline:
                 model_name=best_model_name
             )
             
-            logger.info(f"✅ Model оценена: R² = {result.test_r2:.4f}")
+            logger.info(f"✅ Model : R² = {result.test_r2:.4f}")
             
             return result
             
         except Exception as e:
-            logger.error(f"❌ Error оценки model: {e}")
+            logger.error(f"❌ Error evaluation model: {e}")
             # Return empty result
             return EvaluationResult(
                 model_name=best_model_name,
@@ -533,12 +533,12 @@ class AutoMLPipeline:
             if result.best_model:
                 model_path = self.output_dir / "best_model.pkl"
                 joblib.dump(result.best_model, model_path)
-                logger.info(f"💾 Model сохранена: {model_path}")
+                logger.info(f"💾 Model saved: {model_path}")
             
-            # Save метаданных
+            # Save metadata
             metadata_path = self.output_dir / "pipeline_metadata.json"
             with open(metadata_path, 'w') as f:
-                # Конвертируем results in serializable формат
+                # Converting results in serializable format
                 serializable_metadata = {
                     'best_model_name': result.best_model_name,
                     'best_score': result.best_score,
@@ -548,52 +548,52 @@ class AutoMLPipeline:
                 }
                 json.dump(serializable_metadata, f, indent=2)
             
-            logger.info(f"✅ Метаданные сохранены: {metadata_path}")
+            logger.info(f"✅ Metadata saved: {metadata_path}")
             
         except Exception as e:
-            logger.error(f"❌ Error сохранения results: {e}")
+            logger.error(f"❌ Error saving results: {e}")
     
     def _print_final_report(self, result: PipelineResult):
-        """Вывод итогового отчета"""
+        """Output report"""
         
-        # Create таблицы with результатами
+        # Create table with
         table = Table(title="🎯 Results AUTOML PIPELINE")
         
-        table.add_column("Метрика", style="cyan", no_wrap=True)
+        table.add_column("Metric", style="cyan", no_wrap=True)
         table.add_column("Value", style="magenta")
         
         table.add_row("🏆 Best model", result.best_model_name)
         table.add_row("📊 Best score", f"{abs(result.best_score):.4f}")
-        table.add_row("⏱️ Время execution", f"{result.total_time:.2f}with")
-        table.add_row("🎯 Stages завершено", f"{len(result.stages_completed)}/8")
+        table.add_row("⏱️ Time execution", f"{result.total_time:.2f}with")
+        table.add_row("🎯 Stages completed", f"{len(result.stages_completed)}/8")
         
         if result.feature_generation_result:
-            table.add_row("🎨 Features сгенерировано", str(len(result.feature_generation_result.feature_names)))
+            table.add_row("🎨 Features ", str(len(result.feature_generation_result.feature_names)))
         
         if result.feature_selection_result:
-            table.add_row("🔍 Features отобрано", str(len(result.feature_selection_result.selected_features)))
+            table.add_row("🔍 Features ", str(len(result.feature_selection_result.selected_features)))
         
         if result.optimization_results:
-            table.add_row("⚙️ Models оптимизировано", str(len(result.optimization_results)))
+            table.add_row("⚙️ Models ", str(len(result.optimization_results)))
         
         if result.evaluation_result:
-            table.add_row("📈 R² on тесте", f"{result.evaluation_result.test_r2:.4f}")
-            table.add_row("📉 MSE on тесте", f"{result.evaluation_result.test_mse:.4f}")
+            table.add_row("📈 R² on test", f"{result.evaluation_result.test_r2:.4f}")
+            table.add_row("📉 MSE on test", f"{result.evaluation_result.test_mse:.4f}")
         
         self.console.print(table)
         
-        # Детали stages
+        # Details stages
         stages_panel = Panel(
             " → ".join(result.stages_completed),
-            title="🔄 Выполненные stages"
+            title="🔄 Completed stages"
         )
         self.console.print(stages_panel)
 
 
 if __name__ == "__main__":
-    # Пример use AutoML Pipeline
+    # Example use AutoML Pipeline
     
-    # Create test data (имитация cryptocurrency data)
+    # Create test data (simulation cryptocurrency data)
     np.random.seed(42)
     dates = pd.date_range('2023-01-01', periods=2000, freq='1H')
     
@@ -606,7 +606,7 @@ if __name__ == "__main__":
         'volume': np.random.exponential(1000, 2000)
     }, index=dates)
     
-    # Target variable (будущая return)
+    # Target variable (future return)
     data['future_return'] = data['close'].shift(-1) / data['close'] - 1
     data = data.dropna()
     
@@ -621,7 +621,7 @@ if __name__ == "__main__":
         time_series_split=True
     )
     
-    print(f"\n🎉 AutoML Pipeline завершен!")
+    print(f"\n🎉 AutoML Pipeline completed!")
     print(f"🏆 Best model: {result.best_model_name}")
     print(f"📊 Best score: {abs(result.best_score):.4f}")
-    print(f"⏱️ Время execution: {result.total_time:.2f}with")
+    print(f"⏱️ Time execution: {result.total_time:.2f}with")

@@ -33,7 +33,7 @@ from ..utils.data_preprocessor import DataPreprocessor
 
 @dataclass
 class FeatureGenerationResult:
-    """Result генерации features"""
+    """Result generation features"""
     features: pd.DataFrame
     feature_names: List[str]
     feature_importance: Dict[str, float]
@@ -42,40 +42,40 @@ class FeatureGenerationResult:
 
 
 class BaseFeatureGenerator(ABC):
-    """Base класс for generators features -  pattern"""
+    """Base class for generators features - pattern"""
     
     @abstractmethod
     def generate(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Генерировать features"""
+        """Generate features"""
         pass
     
     @abstractmethod
     def get_feature_names(self) -> List[str]:
-        """Получить имена сгенерированных features"""
+        """ names generated features"""
         pass
 
 
 class TechnicalIndicatorGenerator(BaseFeatureGenerator):
-    """Generator технических индикаторов for криптовалют"""
+    """Generator technical indicators for cryptocurrencies"""
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.feature_names = []
         
     def generate(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Generation технических индикаторов"""
-        logger.info("🔧 Generation технических индикаторов...")
+        """Generation technical indicators"""
+        logger.info("🔧 Generation technical indicators...")
         
         features = pd.DataFrame(index=data.index)
         
-        # Required columns for технического анализа
+        # Required columns for technical analysis
         required_cols = ['open', 'high', 'low', 'close', 'volume']
         if not all(col in data.columns for col in required_cols):
-            logger.warning("⚠️ Недостаточно data for технического анализа")
+            logger.warning("⚠️ Insufficient data for technical analysis")
             return features
         
         try:
-            # Main индикаторы trend
+            # Main indicators trend
             features['sma_10'] = ta.trend.sma_indicator(data['close'], window=10)
             features['sma_20'] = ta.trend.sma_indicator(data['close'], window=20)
             features['sma_50'] = ta.trend.sma_indicator(data['close'], window=50)
@@ -113,7 +113,7 @@ class TechnicalIndicatorGenerator(BaseFeatureGenerator):
             # ATR - Average True Range
             features['atr'] = ta.volatility.average_true_range(data['high'], data['low'], data['close'])
             
-            # Cryptocurrency специфичные индикаторы
+            # Cryptocurrency specific indicators
             features['price_change_1h'] = data['close'].pct_change(periods=1)
             features['price_change_4h'] = data['close'].pct_change(periods=4)
             features['price_change_24h'] = data['close'].pct_change(periods=24)
@@ -127,12 +127,12 @@ class TechnicalIndicatorGenerator(BaseFeatureGenerator):
             features['momentum_10'] = ta.momentum.roc(data['close'], window=10)
             
             self.feature_names = list(features.columns)
-            logger.info(f"✅ Сгенерировано {len(self.feature_names)} технических индикаторов")
+            logger.info(f"✅ Generated {len(self.feature_names)} technical indicators")
             
-            return features.fillna(0)  # Заполнить NaN нулями
+            return features.fillna(0) # Fill NaN zeros
             
         except Exception as e:
-            logger.error(f"❌ Error генерации технических индикаторов: {e}")
+            logger.error(f"❌ Error generation technical indicators: {e}")
             return features
     
     def get_feature_names(self) -> List[str]:
@@ -140,20 +140,20 @@ class TechnicalIndicatorGenerator(BaseFeatureGenerator):
 
 
 class StatisticalFeatureGenerator(BaseFeatureGenerator):
-    """Generator статистических features"""
+    """Generator statistical features"""
     
     def __init__(self, windows: List[int] = [5, 10, 20, 50]):
         self.windows = windows
         self.feature_names = []
     
     def generate(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Generation статистических features"""
-        logger.info("📊 Generation статистических features...")
+        """Generation statistical features"""
+        logger.info("📊 Generation statistical features...")
         
         features = pd.DataFrame(index=data.index)
         
         if 'close' not in data.columns:
-            logger.warning("⚠️ Колонка 'close' not найдена")
+            logger.warning("⚠️ Column 'close' not found")
             return features
         
         try:
@@ -167,11 +167,11 @@ class StatisticalFeatureGenerator(BaseFeatureGenerator):
                 features[f'max_{window}'] = close.rolling(window).max()
                 features[f'median_{window}'] = close.rolling(window).median()
                 
-                # Квантили
+                # Quantiles
                 features[f'q25_{window}'] = close.rolling(window).quantile(0.25)
                 features[f'q75_{window}'] = close.rolling(window).quantile(0.75)
                 
-                # Асимметрия and эксцесс
+                # Skewness and kurtosis
                 features[f'skew_{window}'] = close.rolling(window).skew()
                 features[f'kurtosis_{window}'] = close.rolling(window).kurt()
                 
@@ -180,24 +180,24 @@ class StatisticalFeatureGenerator(BaseFeatureGenerator):
                 rolling_std = close.rolling(window).std()
                 features[f'zscore_{window}'] = (close - rolling_mean) / rolling_std
                 
-                # Relative позиция in диапазоне
+                # Relative in range
                 rolling_min = close.rolling(window).min()
                 rolling_max = close.rolling(window).max()
                 features[f'position_{window}'] = (close - rolling_min) / (rolling_max - rolling_min)
             
-            # Лаговые features
+            # Lagged features
             for lag in [1, 2, 3, 5, 10]:
                 features[f'lag_{lag}'] = close.shift(lag)
                 features[f'diff_{lag}'] = close.diff(lag)
                 features[f'pct_change_{lag}'] = close.pct_change(lag)
             
             self.feature_names = list(features.columns)
-            logger.info(f"✅ Сгенерировано {len(self.feature_names)} статистических features")
+            logger.info(f"✅ Generated {len(self.feature_names)} statistical features")
             
             return features.fillna(method='ffill').fillna(0)
             
         except Exception as e:
-            logger.error(f"❌ Error генерации статистических features: {e}")
+            logger.error(f"❌ Error generation statistical features: {e}")
             return features
     
     def get_feature_names(self) -> List[str]:
@@ -205,7 +205,7 @@ class StatisticalFeatureGenerator(BaseFeatureGenerator):
 
 
 class PolynomialFeatureGenerator(BaseFeatureGenerator):
-    """Generator полиномиальных features"""
+    """Generator polynomial features"""
     
     def __init__(self, degree: int = 2, interaction_only: bool = True, max_features: int = 100):
         self.degree = degree
@@ -215,18 +215,18 @@ class PolynomialFeatureGenerator(BaseFeatureGenerator):
         self.feature_names = []
     
     def generate(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Generation полиномиальных features"""
-        logger.info("🔢 Generation полиномиальных features...")
+        """Generation polynomial features"""
+        logger.info("🔢 Generation polynomial features...")
         
         if data.empty:
             return pd.DataFrame(index=data.index)
         
         try:
-            # Отбираем only numeric columns
+            # Selecting only numeric columns
             numeric_data = data.select_dtypes(include=[np.number]).fillna(0)
             
             if numeric_data.shape[1] > 20:
-                # If слишком много columns, выбираем топ-20 by важности
+                # If too many columns, top-20 by
                 correlations = numeric_data.corrwith(numeric_data.iloc[:, 0]).abs()
                 top_features = correlations.nlargest(20).index
                 numeric_data = numeric_data[top_features]
@@ -241,9 +241,9 @@ class PolynomialFeatureGenerator(BaseFeatureGenerator):
             
             # Limit number features
             if poly_features.shape[1] > self.max_features:
-                # Use SelectKBest for отбора best features
+                # Use SelectKBest for selection best features
                 if len(numeric_data) > 1:
-                    target = numeric_data.iloc[:, 0]  # Первая колонка as target
+                    target = numeric_data.iloc[:, 0] # First column as target
                     selector = SelectKBest(f_regression, k=self.max_features)
                     poly_features = selector.fit_transform(poly_features, target)
                 else:
@@ -253,12 +253,12 @@ class PolynomialFeatureGenerator(BaseFeatureGenerator):
             features = pd.DataFrame(poly_features, index=data.index, columns=feature_names)
             
             self.feature_names = feature_names
-            logger.info(f"✅ Сгенерировано {len(feature_names)} полиномиальных features")
+            logger.info(f"✅ Generated {len(feature_names)} polynomial features")
             
             return features
             
         except Exception as e:
-            logger.error(f"❌ Error генерации полиномиальных features: {e}")
+            logger.error(f"❌ Error generation polynomial features: {e}")
             return pd.DataFrame(index=data.index)
     
     def get_feature_names(self) -> List[str]:
@@ -280,22 +280,22 @@ class TSFreshFeatureGenerator(BaseFeatureGenerator):
             return pd.DataFrame(index=data.index)
         
         try:
-            # Подготовка data for TSFresh
+            # Preparation data for TSFresh
             time_series_data = data.copy()
             time_series_data['id'] = 1
             time_series_data['time'] = range(len(data))
             
-            # Выбираем numeric columns
+            # Select numeric columns
             numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
             if not numeric_cols:
                 return pd.DataFrame(index=data.index)
             
-            # Take первую numeric column for генерации features
+            # Take first numeric column for generation features
             value_col = numeric_cols[0]
             ts_data = time_series_data[['id', 'time', value_col]].copy()
             ts_data.columns = ['id', 'time', 'value']
             
-            # Извлечение features
+            # Extraction features
             extracted_features = extract_features(
                 ts_data,
                 column_id='id',
@@ -305,28 +305,28 @@ class TSFreshFeatureGenerator(BaseFeatureGenerator):
                 disable_progressbar=True
             )
             
-            # Импутация missing values
+            # Imputation missing values
             imputed_features = impute(extracted_features)
             
             # Limit number features
             if imputed_features.shape[1] > self.max_features:
-                # Отбираем топ features by дисперсии
+                # Selecting top features by variance
                 feature_vars = imputed_features.var()
                 top_features = feature_vars.nlargest(self.max_features).index
                 imputed_features = imputed_features[top_features]
             
-            # Транслируем features on весь temporal ряд
+            # Translating features on temporal series
             features = pd.DataFrame(index=data.index)
             for col in imputed_features.columns:
                 features[f'tsfresh_{col}'] = imputed_features[col].iloc[0]
             
             self.feature_names = list(features.columns)
-            logger.info(f"✅ Сгенерировано {len(self.feature_names)} TSFresh features")
+            logger.info(f"✅ Generated {len(self.feature_names)} TSFresh features")
             
             return features.fillna(0)
             
         except Exception as e:
-            logger.error(f"❌ Error генерации TSFresh features: {e}")
+            logger.error(f"❌ Error generation TSFresh features: {e}")
             return pd.DataFrame(index=data.index)
     
     def get_feature_names(self) -> List[str]:
@@ -335,7 +335,7 @@ class TSFreshFeatureGenerator(BaseFeatureGenerator):
 
 class AutoFeatureGenerator:
     """
-    Главный класс for автоматической генерации features
+    Main class for generation features
     Implements enterprise patterns
     """
     
@@ -349,17 +349,17 @@ class AutoFeatureGenerator:
         """Configure generators features"""
         logger.info("🔧 Configure generators features...")
         
-        # Технические индикаторы
+        # Technical indicators
         self.generators['technical'] = TechnicalIndicatorGenerator(
             self.config.feature_generation.get('technical', {})
         )
         
-        # Статистические features
+        # Statistical features
         self.generators['statistical'] = StatisticalFeatureGenerator(
             windows=self.config.feature_generation.get('statistical_windows', [5, 10, 20])
         )
         
-        # Полиномиальные features
+        # Polynomial features
         if self.config.feature_generation.get('enable_polynomial', True):
             self.generators['polynomial'] = PolynomialFeatureGenerator(
                 degree=self.config.feature_generation.get('polynomial_degree', 2),
@@ -372,7 +372,7 @@ class AutoFeatureGenerator:
                 max_features=self.config.feature_generation.get('tsfresh_max_features', 30)
             )
         
-        logger.info(f"✅ Настроено {len(self.generators)} generators")
+        logger.info(f"✅ Configured {len(self.generators)} generators")
     
     def generate_features(
         self,
@@ -381,17 +381,17 @@ class AutoFeatureGenerator:
         parallel: bool = True
     ) -> FeatureGenerationResult:
         """
-        Main method генерации features
+        Main method generation features
         
         Args:
-            data: Исходные data
-            generators: Список generators for use
-            parallel: Использовать параллельную генерацию
+            data: Source data
+            generators: List generators for use
+            parallel: Use parallel generation
             
         Returns:
-            FeatureGenerationResult: Result генерации
+            FeatureGenerationResult: Result generation
         """
-        logger.info("🚀 Launch автоматической генерации features...")
+        logger.info("🚀 Launch generation features...")
         
         import time
         start_time = time.time()
@@ -404,7 +404,7 @@ class AutoFeatureGenerator:
         generation_metadata = {}
         
         if parallel and len(generators) > 1:
-            # Параллельная generation
+            # Parallel generation
             with ThreadPoolExecutor(max_workers=min(len(generators), 4)) as executor:
                 future_to_generator = {
                     executor.submit(self.generators[gen_name].generate, data): gen_name
@@ -431,7 +431,7 @@ class AutoFeatureGenerator:
                                 }
                             progress.advance(task)
                         except Exception as e:
-                            logger.error(f"❌ Error in генераторе {gen_name}: {e}")
+                            logger.error(f"❌ Error in {gen_name}: {e}")
                             progress.advance(task)
         else:
             # Sequential generation
@@ -450,17 +450,17 @@ class AutoFeatureGenerator:
                             'feature_names': feature_names
                         }
                 except Exception as e:
-                    logger.error(f"❌ Error in генераторе {gen_name}: {e}")
+                    logger.error(f"❌ Error in {gen_name}: {e}")
         
-        # Объединение всех features
+        # Merging all features
         if all_features:
             combined_features = pd.concat(all_features, axis=1)
-            # Remove дубликатов columns
+            # Remove duplicates columns
             combined_features = combined_features.loc[:, ~combined_features.columns.duplicated()]
         else:
             combined_features = pd.DataFrame(index=data.index)
             
-        # Computation важности features (simple correlation with первой колонкой)
+        # Computation features (simple correlation with first column)
         feature_importance = {}
         if not combined_features.empty and len(combined_features.columns) > 1:
             try:
@@ -484,12 +484,12 @@ class AutoFeatureGenerator:
             processing_time=processing_time
         )
         
-        logger.info(f"✅ Generation завершена: {len(result.feature_names)} features for {processing_time:.2f}with")
+        logger.info(f"✅ Generation completed: {len(result.feature_names)} features for {processing_time:.2f}with")
         
         return result
     
     def get_feature_importance_ranking(self, result: FeatureGenerationResult) -> List[Tuple[str, float]]:
-        """Получить ranking features by важности"""
+        """ ranking features by """
         return sorted(
             result.feature_importance.items(),
             key=lambda x: x[1],
@@ -498,7 +498,7 @@ class AutoFeatureGenerator:
 
 
 if __name__ == "__main__":
-    # Пример use
+    # Example use
     from ..utils.config_manager import AutoMLConfig
     
     # Create test data
@@ -520,12 +520,12 @@ if __name__ == "__main__":
     # Generation features
     result = generator.generate_features(test_data)
     
-    print(f"Сгенерировано features: {len(result.feature_names)}")
-    print(f"Время обработки: {result.processing_time:.2f}with")
-    print(f"Метаданные: {result.generation_metadata}")
+    print(f"Generated features: {len(result.feature_names)}")
+    print(f"Time processing: {result.processing_time:.2f}with")
+    print(f"Metadata: {result.generation_metadata}")
     
-    # Топ-10 важных features
+    # Top-10 features
     top_features = generator.get_feature_importance_ranking(result)[:10]
-    print("\nТоп-10 важных features:")
+    print("\nTop-10 features:")
     for name, importance in top_features:
         print(f"  {name}: {importance:.4f}")
