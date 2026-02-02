@@ -24,15 +24,15 @@ from src.pipeline.automl_pipeline import AutoMLPipeline
 
 
 class TestDataFixtures:
-    """Фикстуры тестовых данных"""
+    """Fixtures test data"""
     
     @staticmethod
     def create_crypto_data(n_samples: int = 1000) -> pd.DataFrame:
-        """Создание синтетических криптовалютных данных"""
+        """Create synthetic cryptocurrency data"""
         np.random.seed(42)
         dates = pd.date_range('2023-01-01', periods=n_samples, freq='1H')
         
-        # Базовые OHLCV данные
+        # Base OHLCV data
         base_price = 50000
         returns = np.random.randn(n_samples) * 0.02
         
@@ -42,14 +42,14 @@ class TestDataFixtures:
             'low': base_price + np.cumsum(returns * base_price * 0.01) * 0.98,
             'close': base_price + np.cumsum(returns * base_price * 0.01),
             'volume': np.random.exponential(1000, n_samples),
-            'future_return': np.random.randn(n_samples) * 0.01  # Целевая переменная
+            'future_return': np.random.randn(n_samples) * 0.01  # Target variable
         }, index=dates)
         
         return data
     
     @staticmethod
     def create_regression_data(n_samples: int = 500, n_features: int = 10) -> tuple:
-        """Создание данных для регрессии"""
+        """Create data for регрессии"""
         np.random.seed(42)
         
         X = pd.DataFrame(
@@ -57,7 +57,7 @@ class TestDataFixtures:
             columns=[f'feature_{i}' for i in range(n_features)]
         )
         
-        # Целевая переменная как линейная комбинация первых 3 признаков + шум
+        # Target variable as linear combination первых 3 features + шум
         y = pd.Series(
             X.iloc[:, :3].sum(axis=1) + 0.1 * np.random.randn(n_samples)
         )
@@ -66,7 +66,7 @@ class TestDataFixtures:
     
     @staticmethod
     def create_classification_data(n_samples: int = 500, n_features: int = 10) -> tuple:
-        """Создание данных для классификации"""
+        """Create data for классификации"""
         np.random.seed(42)
         
         X = pd.DataFrame(
@@ -74,7 +74,7 @@ class TestDataFixtures:
             columns=[f'feature_{i}' for i in range(n_features)]
         )
         
-        # Бинарная классификация
+        # Binary classification
         threshold = X.iloc[:, :3].sum(axis=1).median()
         y = pd.Series((X.iloc[:, :3].sum(axis=1) > threshold).astype(int))
         
@@ -83,7 +83,7 @@ class TestDataFixtures:
 
 @pytest.fixture
 def temp_output_dir():
-    """Временная директория для тестов"""
+    """Temporary directory for tests"""
     temp_dir = tempfile.mkdtemp()
     yield temp_dir
     shutil.rmtree(temp_dir)
@@ -91,27 +91,27 @@ def temp_output_dir():
 
 @pytest.fixture
 def crypto_data():
-    """Фикстура криптовалютных данных"""
+    """Fixture cryptocurrency data"""
     return TestDataFixtures.create_crypto_data()
 
 
 @pytest.fixture
 def regression_data():
-    """Фикстура данных регрессии"""
+    """Fixture data регрессии"""
     return TestDataFixtures.create_regression_data()
 
 
 @pytest.fixture
 def classification_data():
-    """Фикстура данных классификации"""
+    """Fixture data классификации"""
     return TestDataFixtures.create_classification_data()
 
 
 class TestAutoMLConfig:
-    """Тесты конфигурации AutoML"""
+    """Tests configuration AutoML"""
     
     def test_default_config_creation(self):
-        """Тест создания конфигурации по умолчанию"""
+        """Test creation configuration by default"""
         config = AutoMLConfig()
         
         assert config.project_name == "crypto_trading_automl"
@@ -120,7 +120,7 @@ class TestAutoMLConfig:
         assert config.verbose is True
     
     def test_preset_configs(self):
-        """Тест предустановленных конфигураций"""
+        """Test предустановленных конфигураций"""
         # Fast prototype
         fast_config = PresetConfigs.fast_prototype()
         assert fast_config.hyperparameter_optimization.n_trials == 20
@@ -137,68 +137,68 @@ class TestAutoMLConfig:
         assert crypto_config.feature_generation.enable_technical_indicators is True
     
     def test_config_serialization(self, temp_output_dir):
-        """Тест сохранения и загрузки конфигурации"""
+        """Test сохранения and загрузки configuration"""
         config = AutoMLConfig()
         config_path = Path(temp_output_dir) / "test_config.json"
         
-        # Сохранение
+        # Save
         config.save_to_file(config_path)
         assert config_path.exists()
         
-        # Загрузка
+        # Load
         loaded_config = AutoMLConfig.load_from_file(config_path)
         assert loaded_config.project_name == config.project_name
         assert loaded_config.random_state == config.random_state
 
 
 class TestDataPreprocessor:
-    """Тесты предобработки данных"""
+    """Tests предобработки data"""
     
     def test_basic_preprocessing(self, regression_data):
-        """Тест базовой предобработки"""
+        """Test base предобработки"""
         X, y = regression_data
         
         config = AutoMLConfig()
         preprocessor = DataPreprocessor(config)
         
-        # Добавляем пропущенные значения для тестирования
+        # Add missing values for testing
         X_with_missing = X.copy()
         X_with_missing.loc[10:20, 'feature_0'] = np.nan
         
-        # Предобработка
+        # Preprocessing
         processed_X = preprocessor.preprocess(X_with_missing)
         processed_y = preprocessor.preprocess_target(y)
         
-        assert processed_X.isna().sum().sum() == 0  # Нет пропущенных значений
+        assert processed_X.isna().sum().sum() == 0  # No missing values
         assert processed_y.isna().sum() == 0
         assert len(processed_X) == len(X)
     
     def test_preprocessor_fit_transform(self, regression_data):
-        """Тест fit/transform режима"""
+        """Test fit/transform regime"""
         X, y = regression_data
         
         config = AutoMLConfig()
         preprocessor = DataPreprocessor(config)
         
-        # Разделение данных
+        # Split data
         X_train, X_test = X.iloc[:400], X.iloc[400:]
         
-        # Обучение на train
+        # Training on train
         processed_X_train = preprocessor.preprocess(X_train, fit=True)
         
-        # Применение к test (без обучения)
+        # Apply to test (without training)
         processed_X_test = preprocessor.preprocess(X_test, fit=False)
         
         assert preprocessor.is_fitted is True
         assert processed_X_train.shape[1] == processed_X_test.shape[1]
     
     def test_outlier_handling(self, regression_data):
-        """Тест обработки выбросов"""
+        """Test обработки outliers"""
         X, y = regression_data
         
-        # Добавляем выбросы
+        # Add outliers
         X_with_outliers = X.copy()
-        X_with_outliers.loc[0:5, 'feature_0'] = 100  # Экстремальные значения
+        X_with_outliers.loc[0:5, 'feature_0'] = 100  # Extreme values
         
         config = AutoMLConfig()
         config.data_preprocessing.outlier_handling = 'clip'
@@ -206,19 +206,19 @@ class TestDataPreprocessor:
         preprocessor = DataPreprocessor(config)
         processed_X = preprocessor.preprocess(X_with_outliers)
         
-        # Проверяем что выбросы обработаны
+        # Check that outliers обработаны
         assert processed_X['feature_0'].max() < 100
 
 
 class TestFeatureEngineering:
-    """Тесты генерации и отбора признаков"""
+    """Tests генерации and отбора features"""
     
     def test_feature_generation(self, crypto_data):
-        """Тест генерации признаков"""
+        """Test генерации features"""
         config = AutoMLConfig()
         generator = AutoFeatureGenerator(config)
         
-        # Используем только OHLCV колонки
+        # Use only OHLCV columns
         ohlcv_data = crypto_data[['open', 'high', 'low', 'close', 'volume']].iloc[:100]
         
         result = generator.generate_features(ohlcv_data)
@@ -228,7 +228,7 @@ class TestFeatureEngineering:
         assert not result.features.empty
     
     def test_feature_selection(self, regression_data):
-        """Тест отбора признаков"""
+        """Test отбора features"""
         X, y = regression_data
         
         config = AutoMLConfig()
@@ -241,13 +241,13 @@ class TestFeatureEngineering:
         assert result.selection_time > 0
     
     def test_feature_importance_ranking(self, regression_data):
-        """Тест ранжирования важности признаков"""
+        """Test ранжирования важности features"""
         X, y = regression_data
         
         config = AutoMLConfig()
         generator = AutoFeatureGenerator(config)
         
-        # Создаем простой результат для тестирования
+        # Создаем simple result for testing
         from src.feature_engineering.auto_feature_generator import FeatureGenerationResult
         
         result = FeatureGenerationResult(
@@ -266,10 +266,10 @@ class TestFeatureEngineering:
 
 
 class TestModelSelection:
-    """Тесты отбора моделей"""
+    """Tests отбора models"""
     
     def test_model_selector_regression(self, regression_data):
-        """Тест отбора моделей для регрессии"""
+        """Test отбора models for регрессии"""
         X, y = regression_data
         
         config = AutoMLConfig()
@@ -288,7 +288,7 @@ class TestModelSelection:
         assert len(result.model_scores) > 0
     
     def test_model_selector_classification(self, classification_data):
-        """Тест отбора моделей для классификации"""
+        """Test отбора models for классификации"""
         X, y = classification_data
         
         config = AutoMLConfig()
@@ -306,21 +306,21 @@ class TestModelSelection:
 
 
 class TestHyperparameterOptimization:
-    """Тесты оптимизации гиперпараметров"""
+    """Tests optimization hyperparameters"""
     
     def test_bayesian_optimization(self, regression_data):
-        """Тест байесовской оптимизации"""
+        """Test Bayesian optimization"""
         X, y = regression_data
         
         config = AutoMLConfig()
         optimizer = CryptoMLHyperparameterOptimizer(config)
         
-        # Тест с небольшим количеством итераций
+        # Test with небольшим number iterations
         result = optimizer.optimize_model(
             X, y,
             model_name='ridge',
             optimizer_method='optuna_tpe',
-            n_calls=5  # Мало для скорости тестов
+            n_calls=5  # Мало for speed tests
         )
         
         assert result.model_name == 'ridge'
@@ -328,7 +328,7 @@ class TestHyperparameterOptimization:
         assert result.optimization_time > 0
     
     def test_multiple_models_optimization(self, regression_data):
-        """Тест оптимизации нескольких моделей"""
+        """Test optimization нескольких models"""
         X, y = regression_data
         
         config = AutoMLConfig()
@@ -345,13 +345,13 @@ class TestHyperparameterOptimization:
 
 
 class TestEnsembleMethods:
-    """Тесты ансамблевых методов"""
+    """Tests ensemble methods"""
     
     def test_ensemble_builder(self, regression_data):
-        """Тест построения ансамблей"""
+        """Test построения ensembles"""
         X, y = regression_data
         
-        # Создание простых моделей
+        # Create simple models
         from sklearn.ensemble import RandomForestRegressor
         from sklearn.linear_model import Ridge
         
@@ -360,7 +360,7 @@ class TestEnsembleMethods:
             'random_forest': RandomForestRegressor(n_estimators=10, random_state=42)
         }
         
-        # Обучение моделей
+        # Training models
         for model in models.values():
             model.fit(X, y)
         
@@ -379,33 +379,33 @@ class TestEnsembleMethods:
 
 
 class TestModelEvaluation:
-    """Тесты оценки моделей"""
+    """Tests оценки models"""
     
     def test_crypto_trading_metrics(self):
-        """Тест криптотрейдинговых метрик"""
-        # Тестовые данные доходности
+        """Test crypto trading metrics"""
+        # Test data returns
         returns = np.array([0.01, -0.02, 0.03, -0.01, 0.02])
         predictions = np.array([0.02, -0.01, 0.03, 0.01, 0.01])
         
-        # Тест Sharpe ratio
+        # Test Sharpe ratio
         sharpe = CryptoTradingMetrics.sharpe_ratio(returns)
         assert isinstance(sharpe, float)
         
-        # Тест Sortino ratio
+        # Test Sortino ratio
         sortino = CryptoTradingMetrics.sortino_ratio(returns)
         assert isinstance(sortino, float)
         
-        # Тест максимальной просадки
+        # Test максимальной drawdown
         max_dd = CryptoTradingMetrics.maximum_drawdown(returns)
         assert isinstance(max_dd, float)
-        assert max_dd <= 0  # Просадка должна быть отрицательной
+        assert max_dd <= 0  # Drawdown must be отрицательной
         
-        # Тест win rate
+        # Test win rate
         win_rate = CryptoTradingMetrics.win_rate(predictions, returns)
         assert 0 <= win_rate <= 1
     
     def test_model_evaluator(self, regression_data):
-        """Тест оценщика моделей"""
+        """Test оценщика models"""
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import Ridge
         
@@ -414,7 +414,7 @@ class TestModelEvaluation:
             X, y, test_size=0.3, random_state=42
         )
         
-        # Обучение модели
+        # Training model
         model = Ridge(alpha=1.0)
         model.fit(X_train, y_train)
         
@@ -433,25 +433,25 @@ class TestModelEvaluation:
 
 
 class TestAutoMLPipeline:
-    """Тесты полного AutoML пайплайна"""
+    """Tests полного AutoML pipeline"""
     
     def test_pipeline_basic_run(self, crypto_data, temp_output_dir):
-        """Тест базового запуска пайплайна"""
-        # Используем быструю конфигурацию
+        """Test базового запуска pipeline"""
+        # Use быструю configuration
         config = PresetConfigs.fast_prototype()
-        config.hyperparameter_optimization.n_trials = 3  # Еще быстрее
+        config.hyperparameter_optimization.n_trials = 3  # Yet faster
         config.model_selection.cv_folds = 2
         
         pipeline = AutoMLPipeline(config, output_dir=temp_output_dir)
         
-        # Используем небольшой датасет для скорости
+        # Use небольшой dataset for speed
         small_data = crypto_data.iloc[:200].copy()
         
         result = pipeline.run(
             data=small_data,
             target_column='future_return',
             test_size=0.3,
-            stages=['data_preprocessing', 'model_selection']  # Только основные этапы
+            stages=['data_preprocessing', 'model_selection']  # Only main stages
         )
         
         assert result.best_model_name is not None
@@ -459,18 +459,18 @@ class TestAutoMLPipeline:
         assert len(result.stages_completed) > 0
     
     def test_pipeline_with_all_stages(self, regression_data, temp_output_dir):
-        """Тест пайплайна со всеми этапами (упрощенная версия)"""
+        """Test pipeline со всеми этапами (упрощенная версия)"""
         X, y = regression_data
         
-        # Объединяем в датафрейм
+        # Combine in dataframe
         data = X.copy()
         data['target'] = y
         
-        # Минимальная конфигурация для скорости
+        # Minimal configuration for speed
         config = PresetConfigs.fast_prototype()
         config.hyperparameter_optimization.n_trials = 2
-        config.model_selection.sklearn_models = ['ridge']  # Только одна модель
-        config.feature_generation.enable_tsfresh_features = False  # Отключаем медленные признаки
+        config.model_selection.sklearn_models = ['ridge']  # Only одна model
+        config.feature_generation.enable_tsfresh_features = False  # Disable slow features
         
         pipeline = AutoMLPipeline(config, output_dir=temp_output_dir)
         
@@ -484,32 +484,32 @@ class TestAutoMLPipeline:
         assert result.total_time > 0
     
     def test_pipeline_error_handling(self, temp_output_dir):
-        """Тест обработки ошибок в пайплайне"""
+        """Test обработки errors in пайплайне"""
         config = AutoMLConfig()
         pipeline = AutoMLPipeline(config, output_dir=temp_output_dir)
         
-        # Неправильные данные
+        # Invalid data
         bad_data = pd.DataFrame({'a': [1, 2, 3]})
         
-        # Должен обработать ошибку без краха
+        # Should обработать error without краха
         with pytest.raises(Exception):
             pipeline.run(bad_data, target_column='nonexistent_column')
 
 
 class TestIntegrationScenarios:
-    """Интеграционные тесты различных сценариев"""
+    """Integration tests various scenarios"""
     
     def test_crypto_trading_scenario(self, crypto_data, temp_output_dir):
-        """Тест полного сценария криптотрейдинга"""
-        # Криптовалютная конфигурация
+        """Test полного scenario crypto trading"""
+        # Cryptocurrency configuration
         config = PresetConfigs.crypto_trading()
-        config.hyperparameter_optimization.n_trials = 5  # Быстрые тесты
+        config.hyperparameter_optimization.n_trials = 5  # Fast tests
         config.model_selection.cv_folds = 3
-        config.feature_generation.enable_tsfresh_features = False  # Отключаем для скорости
+        config.feature_generation.enable_tsfresh_features = False  # Disable for speed
         
         pipeline = AutoMLPipeline(config, output_dir=temp_output_dir)
         
-        # Ограничиваем данные для скорости
+        # Limit data for speed
         test_data = crypto_data.iloc[:300].copy()
         
         result = pipeline.run(
@@ -523,56 +523,56 @@ class TestIntegrationScenarios:
         assert 'crypto_metrics' in result.evaluation_result.evaluation_metadata
     
     def test_high_frequency_trading_scenario(self, crypto_data, temp_output_dir):
-        """Тест сценария высокочастотного трейдинга"""
+        """Test scenario high-frequency trading"""
         config = PresetConfigs.high_frequency_trading()
         config.hyperparameter_optimization.n_trials = 3
         
         pipeline = AutoMLPipeline(config, output_dir=temp_output_dir)
         
-        # HFT требует быстрой обработки
+        # HFT requires fast обработки
         hft_data = crypto_data.iloc[:150].copy()
         
         result = pipeline.run(
             data=hft_data,
             target_column='future_return',
-            stages=['data_preprocessing', 'model_selection']  # Минимум этапов для скорости
+            stages=['data_preprocessing', 'model_selection']  # Minimum stages for speed
         )
         
-        assert result.total_time < 60  # HFT должен быть быстрым
+        assert result.total_time < 60  # HFT should be fast
         assert result.best_model is not None
 
 
-# Дополнительные утилитарные тесты
+# Additional utility tests
 class TestUtilities:
-    """Тесты утилитарных функций"""
+    """Tests utility functions"""
     
     def test_config_validation(self):
-        """Тест валидации конфигурации"""
+        """Test валидации configuration"""
         config = AutoMLConfig()
         
-        # Проверяем валидаторы
+        # Check валидаторы
         assert config.max_memory_gb > 0
         assert config.n_jobs != 0
     
     def test_data_fixtures_quality(self):
-        """Тест качества тестовых данных"""
-        # Криптовалютные данные
+        """Test качества test data"""
+        # Cryptocurrency data
         crypto_data = TestDataFixtures.create_crypto_data(100)
         assert len(crypto_data) == 100
         assert 'open' in crypto_data.columns
         assert 'future_return' in crypto_data.columns
         
-        # Данные регрессии
+        # Data регрессии
         X, y = TestDataFixtures.create_regression_data(50, 5)
         assert X.shape == (50, 5)
         assert len(y) == 50
         
-        # Данные классификации
+        # Data классификации
         X, y = TestDataFixtures.create_classification_data(50, 5)
         assert X.shape == (50, 5)
         assert set(y.unique()).issubset({0, 1})
 
 
 if __name__ == "__main__":
-    # Запуск тестов
+    # Launch tests
     pytest.main([__file__, "-v", "--tb=short"])

@@ -33,7 +33,7 @@ from .config_manager import AutoMLConfig, DataPreprocessingConfig
 
 @dataclass
 class PreprocessingResult:
-    """Результат предобработки данных"""
+    """Result предобработки data"""
     processed_data: pd.DataFrame
     preprocessing_metadata: Dict[str, Any]
     transformers: Dict[str, Any]
@@ -44,15 +44,15 @@ class PreprocessingResult:
 
 class DataPreprocessor:
     """
-    Продвинутый препроцессор данных для криптотрейдинга
-    Реализует enterprise patterns
+    Продвинутый препроцессор data for crypto trading
+    Implements enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):
         self.config = config or AutoMLConfig()
         self.preprocessing_config = self.config.data_preprocessing
         
-        # Сохранение трансформеров для повторного использования
+        # Save трансформеров for repeated use
         self.fitted_transformers = {}
         self.preprocessing_pipeline = None
         self.is_fitted = False
@@ -60,7 +60,7 @@ class DataPreprocessor:
         # Метаданные
         self.preprocessing_metadata = {}
         
-        logger.info("🔧 DataPreprocessor инициализирован")
+        logger.info("🔧 DataPreprocessor initialized")
     
     def preprocess(
         self,
@@ -69,12 +69,12 @@ class DataPreprocessor:
         preserve_index: bool = True
     ) -> pd.DataFrame:
         """
-        Основной метод предобработки данных
+        Main method предобработки data
         
         Args:
-            data: Исходные данные
-            fit: Обучать трансформеры (True для обучающей выборки)
-            preserve_index: Сохранять индекс
+            data: Исходные data
+            fit: Обучать трансформеры (True for training set)
+            preserve_index: Сохранять index
         """
         import time
         start_time = time.time()
@@ -90,37 +90,37 @@ class DataPreprocessor:
                 TextColumn("[progress.description]{task.description}"),
             ) as progress:
                 
-                # Этап 1: Базовая очистка
-                task = progress.add_task("Базовая очистка данных...", total=None)
+                # Stage 1: Base очистка
+                task = progress.add_task("Base очистка data...", total=None)
                 processed_data = self._basic_cleaning(processed_data)
                 
-                # Этап 2: Обработка пропущенных значений
-                progress.update(task, description="Обработка пропущенных значений...")
+                # Stage 2: Processing missing values
+                progress.update(task, description="Processing missing values...")
                 processed_data = self._handle_missing_values(processed_data, fit)
                 
-                # Этап 3: Обработка выбросов
-                progress.update(task, description="Обработка выбросов...")
+                # Stage 3: Processing outliers
+                progress.update(task, description="Processing outliers...")
                 processed_data = self._handle_outliers(processed_data, fit)
                 
-                # Этап 4: Кодирование категориальных признаков
-                progress.update(task, description="Кодирование категориальных признаков...")
+                # Stage 4: Encode categorical features
+                progress.update(task, description="Encode categorical features...")
                 processed_data = self._encode_categorical(processed_data, fit)
                 
-                # Этап 5: Масштабирование числовых признаков
-                progress.update(task, description="Масштабирование признаков...")
+                # Stage 5: Scale numeric features
+                progress.update(task, description="Scale features...")
                 processed_data = self._scale_features(processed_data, fit)
                 
-                # Этап 6: Удаление признаков с низкой дисперсией
-                progress.update(task, description="Удаление признаков с низкой дисперсией...")
+                # Stage 6: Remove features with low дисперсией
+                progress.update(task, description="Remove features with low дисперсией...")
                 processed_data = self._remove_low_variance_features(processed_data, fit)
                 
-                # Этап 7: Финальная очистка
+                # Stage 7: Финальная очистка
                 progress.update(task, description="Финальная очистка...")
                 processed_data = self._final_cleaning(processed_data)
                 
-                progress.update(task, description="✅ Предобработка завершена", completed=True)
+                progress.update(task, description="✅ Preprocessing завершена", completed=True)
         
-            # Сохранение метаданных
+            # Save метаданных
             processing_time = time.time() - start_time
             final_shape = processed_data.shape
             
@@ -139,67 +139,67 @@ class DataPreprocessor:
             if fit:
                 self.is_fitted = True
             
-            logger.info(f"✅ Предобработка завершена: {original_shape} → {final_shape} за {processing_time:.2f}с")
+            logger.info(f"✅ Preprocessing завершена: {original_shape} → {final_shape} for {processing_time:.2f}with")
             
             return processed_data
             
         except Exception as e:
-            logger.error(f"❌ Ошибка предобработки: {e}")
-            return data  # Возвращаем исходные данные в случае ошибки
+            logger.error(f"❌ Error предобработки: {e}")
+            return data  # Return исходные data in случае errors
     
     def preprocess_target(self, target: pd.Series, fit: bool = True) -> pd.Series:
-        """Предобработка целевой переменной"""
-        logger.info("🎯 Предобработка целевой переменной...")
+        """Preprocessing target variable"""
+        logger.info("🎯 Preprocessing target variable...")
         
         processed_target = target.copy()
         
         try:
-            # Обработка пропущенных значений
+            # Processing missing values
             if processed_target.isna().any():
                 if self.preprocessing_config.missing_value_strategy == 'drop':
                     processed_target = processed_target.dropna()
                 else:
                     fill_value = processed_target.mean()
                     processed_target = processed_target.fillna(fill_value)
-                    logger.info(f"📝 Заполнено {target.isna().sum()} пропущенных значений целевой переменной")
+                    logger.info(f"📝 Заполнено {target.isna().sum()} missing values target variable")
             
-            # Обработка выбросов в целевой переменной
+            # Processing outliers in target variable
             if self.preprocessing_config.outlier_handling != 'none':
                 processed_target = self._handle_target_outliers(processed_target, fit)
             
-            # Масштабирование целевой переменной (если необходимо)
+            # Scale target variable (if necessary)
             if self.preprocessing_config.scale_target:
                 processed_target = self._scale_target(processed_target, fit)
             
-            logger.info(f"✅ Целевая переменная обработана: {len(target)} → {len(processed_target)}")
+            logger.info(f"✅ Target variable обработана: {len(target)} → {len(processed_target)}")
             
             return processed_target
             
         except Exception as e:
-            logger.error(f"❌ Ошибка обработки целевой переменной: {e}")
+            logger.error(f"❌ Error обработки target variable: {e}")
             return target
     
     def _basic_cleaning(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Базовая очистка данных"""
-        logger.info("🧹 Базовая очистка данных...")
+        """Base очистка data"""
+        logger.info("🧹 Base очистка data...")
         
         cleaned_data = data.copy()
         
-        # Удаление полностью пустых строк и колонок
+        # Remove completely empty rows and columns
         initial_shape = cleaned_data.shape
-        cleaned_data = cleaned_data.dropna(how='all', axis=0)  # Строки
-        cleaned_data = cleaned_data.dropna(how='all', axis=1)  # Колонки
+        cleaned_data = cleaned_data.dropna(how='all', axis=0)  # Rows
+        cleaned_data = cleaned_data.dropna(how='all', axis=1)  # Columns
         
         if cleaned_data.shape != initial_shape:
-            logger.info(f"📝 Удалены пустые строки/колонки: {initial_shape} → {cleaned_data.shape}")
+            logger.info(f"📝 Удалены empty rows/columns: {initial_shape} → {cleaned_data.shape}")
         
-        # Удаление дублирующихся строк
+        # Remove дублирующихся rows
         duplicates = cleaned_data.duplicated().sum()
         if duplicates > 0:
             cleaned_data = cleaned_data.drop_duplicates()
-            logger.info(f"📝 Удалено {duplicates} дублирующихся строк")
+            logger.info(f"📝 Удалено {duplicates} дублирующихся rows")
         
-        # Удаление констант (колонки с одним уникальным значением)
+        # Remove констант (columns with одним unique значением)
         constant_columns = []
         for col in cleaned_data.columns:
             if cleaned_data[col].nunique() <= 1:
@@ -207,34 +207,34 @@ class DataPreprocessor:
         
         if constant_columns:
             cleaned_data = cleaned_data.drop(columns=constant_columns)
-            logger.info(f"📝 Удалены константные колонки: {constant_columns}")
+            logger.info(f"📝 Удалены константные columns: {constant_columns}")
         
         return cleaned_data
     
     def _handle_missing_values(self, data: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
-        """Обработка пропущенных значений"""
-        logger.info("🕳️ Обработка пропущенных значений...")
+        """Processing missing values"""
+        logger.info("🕳️ Processing missing values...")
         
         if not data.isna().any().any():
-            logger.info("📝 Пропущенные значения не обнаружены")
+            logger.info("📝 Missing values not обнаружены")
             return data
         
         strategy = self.preprocessing_config.missing_value_strategy
         threshold = self.preprocessing_config.missing_value_threshold
         
-        # Удаление колонок с большим количеством пропусков
+        # Remove columns with большим number gaps
         missing_ratios = data.isna().sum() / len(data)
         columns_to_drop = missing_ratios[missing_ratios > threshold].index.tolist()
         
         if columns_to_drop:
             data = data.drop(columns=columns_to_drop)
-            logger.info(f"📝 Удалены колонки с >({threshold*100}%) пропусков: {columns_to_drop}")
+            logger.info(f"📝 Удалены columns with >({threshold*100}%) gaps: {columns_to_drop}")
         
-        # Разделение на числовые и категориальные колонки
+        # Split on numeric and categorical columns
         numeric_columns = data.select_dtypes(include=[np.number]).columns.tolist()
         categorical_columns = data.select_dtypes(exclude=[np.number]).columns.tolist()
         
-        # Обработка числовых колонок
+        # Processing numeric columns
         if numeric_columns:
             if strategy == 'mean':
                 imputer_numeric = SimpleImputer(strategy='mean')
@@ -252,7 +252,7 @@ class DataPreprocessor:
             elif imputer_numeric and not fit and 'numeric_imputer' in self.fitted_transformers:
                 data[numeric_columns] = self.fitted_transformers['numeric_imputer'].transform(data[numeric_columns])
         
-        # Обработка категориальных колонок
+        # Processing categorical columns
         if categorical_columns:
             imputer_categorical = SimpleImputer(strategy='most_frequent')
             
@@ -264,17 +264,17 @@ class DataPreprocessor:
         
         remaining_missing = data.isna().sum().sum()
         if remaining_missing > 0:
-            logger.warning(f"⚠️ Остались пропущенные значения: {remaining_missing}")
+            logger.warning(f"⚠️ Остались missing values: {remaining_missing}")
             # Финальная очистка - заполнение нулями
             data = data.fillna(0)
         else:
-            logger.info("✅ Все пропущенные значения обработаны")
+            logger.info("✅ All missing values обработаны")
         
         return data
     
     def _handle_outliers(self, data: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
-        """Обработка выбросов"""
-        logger.info("📊 Обработка выбросов...")
+        """Processing outliers"""
+        logger.info("📊 Processing outliers...")
         
         method = self.preprocessing_config.outlier_detection_method
         handling = self.preprocessing_config.outlier_handling
@@ -329,34 +329,34 @@ class DataPreprocessor:
                         if method != 'isolation_forest':
                             data.loc[outliers_mask, col] = data[col].clip(lower_bound, upper_bound)
                         else:
-                            # Для isolation forest используем квантили
+                            # For isolation forest use квантили
                             lower_clip = data[col].quantile(0.01)
                             upper_clip = data[col].quantile(0.99)
                             data.loc[outliers_mask, col] = data[col].clip(lower_clip, upper_clip)
                     elif handling == 'transform':
-                        # Логарифмическое преобразование для положительных значений
+                        # Logarithmic transformation for положительных values
                         if data[col].min() > 0:
                             data.loc[outliers_mask, col] = np.log1p(data.loc[outliers_mask, col])
             
             except Exception as e:
-                logger.warning(f"⚠️ Ошибка обработки выбросов в колонке {col}: {e}")
+                logger.warning(f"⚠️ Error обработки outliers in колонке {col}: {e}")
                 continue
         
         if outliers_detected > 0:
-            logger.info(f"📝 Обработано {outliers_detected} выбросов методом {method}")
+            logger.info(f"📝 Обработано {outliers_detected} outliers method {method}")
         else:
-            logger.info("📝 Выбросы не обнаружены")
+            logger.info("📝 Outliers not обнаружены")
         
         return data
     
     def _encode_categorical(self, data: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
-        """Кодирование категориальных признаков"""
-        logger.info("🔤 Кодирование категориальных признаков...")
+        """Encode categorical features"""
+        logger.info("🔤 Encode categorical features...")
         
         categorical_columns = data.select_dtypes(exclude=[np.number]).columns.tolist()
         
         if not categorical_columns:
-            logger.info("📝 Категориальные признаки не обнаружены")
+            logger.info("📝 Categorical features not обнаружены")
             return data
         
         encoding_method = self.preprocessing_config.categorical_encoding
@@ -381,11 +381,11 @@ class DataPreprocessor:
                         else:
                             continue
                     
-                    # Создание имен признаков
+                    # Create имен features
                     feature_names = [f"{col}_{cat}" for cat in encoder.categories_[0]]
                     encoded_df = pd.DataFrame(encoded_features, columns=feature_names, index=data.index)
                     
-                    # Замена исходного признака
+                    # Замена исходного features
                     encoded_data = encoded_data.drop(columns=[col])
                     encoded_data = pd.concat([encoded_data, encoded_df], axis=1)
                     
@@ -398,11 +398,11 @@ class DataPreprocessor:
                     else:
                         if f'label_{col}' in self.fitted_transformers:
                             encoder = self.fitted_transformers[f'label_{col}']
-                            # Обработка неизвестных категорий
+                            # Processing неизвестных категорий
                             try:
                                 encoded_data[col] = encoder.transform(data[col].astype(str))
                             except ValueError:
-                                # Для неизвестных категорий присваиваем -1
+                                # For неизвестных категорий присваиваем -1
                                 encoded_values = []
                                 for value in data[col].astype(str):
                                     if value in encoder.classes_:
@@ -412,21 +412,21 @@ class DataPreprocessor:
                                 encoded_data[col] = encoded_values
             
             except Exception as e:
-                logger.warning(f"⚠️ Ошибка кодирования признака {col}: {e}")
+                logger.warning(f"⚠️ Error encoding features {col}: {e}")
                 continue
         
-        logger.info(f"✅ Закодировано {len(categorical_columns)} категориальных признаков")
+        logger.info(f"✅ Закодировано {len(categorical_columns)} categorical features")
         
         return encoded_data
     
     def _scale_features(self, data: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
-        """Масштабирование числовых признаков"""
-        logger.info("⚖️ Масштабирование числовых признаков...")
+        """Scale numeric features"""
+        logger.info("⚖️ Scale numeric features...")
         
         numeric_columns = data.select_dtypes(include=[np.number]).columns.tolist()
         
         if not numeric_columns:
-            logger.info("📝 Числовые признаки для масштабирования не найдены")
+            logger.info("📝 Numeric features for масштабирования not найдены")
             return data
         
         scaling_method = self.preprocessing_config.scaling_method
@@ -442,7 +442,7 @@ class DataPreprocessor:
             elif scaling_method == 'quantile':
                 scaler = QuantileUniformTransformer()
             else:
-                logger.warning(f"⚠️ Неизвестный метод масштабирования: {scaling_method}")
+                logger.warning(f"⚠️ Неизвестный method масштабирования: {scaling_method}")
                 return data
             
             if fit:
@@ -453,19 +453,19 @@ class DataPreprocessor:
                     scaler = self.fitted_transformers['feature_scaler']
                     scaled_data[numeric_columns] = scaler.transform(data[numeric_columns])
                 else:
-                    logger.warning("⚠️ Скейлер не найден, пропуск масштабирования")
+                    logger.warning("⚠️ Скейлер not найден, пропуск масштабирования")
             
-            logger.info(f"✅ Масштабированы {len(numeric_columns)} числовых признаков методом {scaling_method}")
+            logger.info(f"✅ Масштабированы {len(numeric_columns)} numeric features method {scaling_method}")
             
         except Exception as e:
-            logger.error(f"❌ Ошибка масштабирования: {e}")
+            logger.error(f"❌ Error масштабирования: {e}")
             return data
         
         return scaled_data
     
     def _remove_low_variance_features(self, data: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
-        """Удаление признаков с низкой дисперсией"""
-        logger.info("📉 Удаление признаков с низкой дисперсией...")
+        """Remove features with low дисперсией"""
+        logger.info("📉 Remove features with low дисперсией...")
         
         numeric_columns = data.select_dtypes(include=[np.number]).columns.tolist()
         
@@ -479,7 +479,7 @@ class DataPreprocessor:
                 variance_selector = VarianceThreshold(threshold=threshold)
                 selected_features = variance_selector.fit_transform(data[numeric_columns])
                 
-                # Получение индексов отобранных признаков
+                # Get indices отобранных features
                 selected_mask = variance_selector.get_support()
                 selected_columns = [col for col, mask in zip(numeric_columns, selected_mask) if mask]
                 removed_columns = [col for col, mask in zip(numeric_columns, selected_mask) if not mask]
@@ -493,43 +493,43 @@ class DataPreprocessor:
                 else:
                     return data
             
-            # Удаление признаков с низкой дисперсией
+            # Remove features with low дисперсией
             filtered_data = data.copy()
             if removed_columns:
                 filtered_data = filtered_data.drop(columns=removed_columns)
-                logger.info(f"📝 Удалено {len(removed_columns)} признаков с низкой дисперсией")
+                logger.info(f"📝 Удалено {len(removed_columns)} features with low дисперсией")
             else:
-                logger.info("📝 Все признаки имеют достаточную дисперсию")
+                logger.info("📝 All features имеют достаточную дисперсию")
             
             return filtered_data
             
         except Exception as e:
-            logger.error(f"❌ Ошибка фильтрации по дисперсии: {e}")
+            logger.error(f"❌ Error фильтрации by дисперсии: {e}")
             return data
     
     def _final_cleaning(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Финальная очистка данных"""
-        logger.info("🏁 Финальная очистка данных...")
+        """Финальная очистка data"""
+        logger.info("🏁 Финальная очистка data...")
         
         cleaned_data = data.copy()
         
-        # Удаление бесконечных значений
+        # Remove бесконечных values
         infinite_mask = np.isinf(cleaned_data.select_dtypes(include=[np.number]))
         if infinite_mask.any().any():
             cleaned_data = cleaned_data.replace([np.inf, -np.inf], np.nan)
             cleaned_data = cleaned_data.fillna(0)
-            logger.info("📝 Обработаны бесконечные значения")
+            logger.info("📝 Обработаны бесконечные values")
         
-        # Финальная проверка на NaN
+        # Финальная check on NaN
         nan_count = cleaned_data.isna().sum().sum()
         if nan_count > 0:
             cleaned_data = cleaned_data.fillna(0)
-            logger.info(f"📝 Заполнено {nan_count} оставшихся NaN значений")
+            logger.info(f"📝 Заполнено {nan_count} оставшихся NaN values")
         
         return cleaned_data
     
     def _handle_target_outliers(self, target: pd.Series, fit: bool = True) -> pd.Series:
-        """Обработка выбросов в целевой переменной"""
+        """Processing outliers in target variable"""
         method = self.preprocessing_config.outlier_detection_method
         threshold = self.preprocessing_config.outlier_threshold
         
@@ -551,15 +551,15 @@ class DataPreprocessor:
         
         outliers_count = outliers_mask.sum()
         if outliers_count > 0:
-            # Обрезаем выбросы
+            # Обрезаем outliers
             target_clipped = target.clip(target.quantile(0.01), target.quantile(0.99))
-            logger.info(f"📝 Обработано {outliers_count} выбросов в целевой переменной")
+            logger.info(f"📝 Обработано {outliers_count} outliers in target variable")
             return target_clipped
         
         return target
     
     def _scale_target(self, target: pd.Series, fit: bool = True) -> pd.Series:
-        """Масштабирование целевой переменной"""
+        """Scale target variable"""
         try:
             if fit:
                 scaler = StandardScaler()
@@ -575,11 +575,11 @@ class DataPreprocessor:
             return pd.Series(scaled_target, index=target.index)
             
         except Exception as e:
-            logger.error(f"❌ Ошибка масштабирования целевой переменной: {e}")
+            logger.error(f"❌ Error масштабирования target variable: {e}")
             return target
     
     def inverse_transform_target(self, scaled_target: pd.Series) -> pd.Series:
-        """Обратное преобразование целевой переменной"""
+        """Inverse transformation target variable"""
         if 'target_scaler' not in self.fitted_transformers:
             return scaled_target
         
@@ -588,11 +588,11 @@ class DataPreprocessor:
             original_target = scaler.inverse_transform(scaled_target.values.reshape(-1, 1)).flatten()
             return pd.Series(original_target, index=scaled_target.index)
         except Exception as e:
-            logger.error(f"❌ Ошибка обратного преобразования: {e}")
+            logger.error(f"❌ Error обратного преобразования: {e}")
             return scaled_target
     
     def save_transformers(self, filepath: Union[str, Path]):
-        """Сохранение обученных трансформеров"""
+        """Save обученных трансформеров"""
         filepath = Path(filepath)
         filepath.parent.mkdir(parents=True, exist_ok=True)
         
@@ -607,11 +607,11 @@ class DataPreprocessor:
         logger.info(f"💾 Трансформеры сохранены: {filepath}")
     
     def load_transformers(self, filepath: Union[str, Path]):
-        """Загрузка обученных трансформеров"""
+        """Load обученных трансформеров"""
         filepath = Path(filepath)
         
         if not filepath.exists():
-            raise FileNotFoundError(f"Файл трансформеров не найден: {filepath}")
+            raise FileNotFoundError(f"File трансформеров not найден: {filepath}")
         
         transformers_data = joblib.load(filepath)
         
@@ -622,28 +622,28 @@ class DataPreprocessor:
         logger.info(f"📂 Трансформеры загружены: {filepath}")
     
     def get_preprocessing_report(self) -> str:
-        """Создание отчета по предобработке"""
+        """Create отчета by предобработке"""
         if not self.preprocessing_metadata:
-            return "Предобработка еще не выполнена"
+            return "Preprocessing yet not выполнена"
         
         metadata = self.preprocessing_metadata
         
         report = f"""
-=== ОТЧЕТ ПО ПРЕДОБРАБОТКЕ ДАННЫХ ===
+=== ОТЧЕТ By ПРЕДОБРАБОТКЕ Data ===
 
-Исходные данные: {metadata.get('original_shape', 'N/A')}
-Обработанные данные: {metadata.get('final_shape', 'N/A')}
-Время обработки: {metadata.get('processing_time', 0):.2f}с
+Исходные data: {metadata.get('original_shape', 'N/A')}
+Обработанные data: {metadata.get('final_shape', 'N/A')}
+Время обработки: {metadata.get('processing_time', 0):.2f}with
 
 Изменения:
-- Удалено строк: {metadata.get('rows_removed', 0)}
-- Удалено колонок: {metadata.get('columns_removed', 0)}
+- Удалено rows: {metadata.get('rows_removed', 0)}
+- Удалено columns: {metadata.get('columns_removed', 0)}
 
-Выполненные этапы:
-- Пропущенные значения: {'✅' if metadata.get('missing_values_handled') else '❌'}
-- Обработка выбросов: {'✅' if metadata.get('outliers_handled') else '❌'}
-- Кодирование категориальных: {'✅' if metadata.get('categorical_encoded') else '❌'}
-- Масштабирование признаков: {'✅' if metadata.get('features_scaled') else '❌'}
+Выполненные stages:
+- Missing values: {'✅' if metadata.get('missing_values_handled') else '❌'}
+- Processing outliers: {'✅' if metadata.get('outliers_handled') else '❌'}
+- Encode categorical: {'✅' if metadata.get('categorical_encoded') else '❌'}
+- Scale features: {'✅' if metadata.get('features_scaled') else '❌'}
 
 Обученные трансформеры: {len(self.fitted_transformers)}
 """
@@ -652,18 +652,18 @@ class DataPreprocessor:
 
 
 if __name__ == "__main__":
-    # Пример использования DataPreprocessor
+    # Пример use DataPreprocessor
     
-    # Создание тестовых данных
+    # Create test data
     np.random.seed(42)
     n_samples = 1000
     
-    # Создание данных с различными проблемами
+    # Create data with various проблемами
     data = pd.DataFrame({
         'numeric_normal': np.random.randn(n_samples),
         'numeric_with_outliers': np.concatenate([
             np.random.randn(n_samples - 50),
-            np.random.randn(50) * 10  # Выбросы
+            np.random.randn(50) * 10  # Outliers
         ]),
         'numeric_with_missing': np.random.randn(n_samples),
         'categorical': np.random.choice(['A', 'B', 'C', 'D'], n_samples),
@@ -671,42 +671,42 @@ if __name__ == "__main__":
         'constant': [1] * n_samples,  # Константный признак
     })
     
-    # Добавление пропущенных значений
+    # Add missing values
     missing_indices = np.random.choice(n_samples, size=100, replace=False)
     data.loc[missing_indices, 'numeric_with_missing'] = np.nan
     
-    # Целевая переменная
+    # Target variable
     target = pd.Series(
         data['numeric_normal'] * 2 + 
         data['binary'] * 3 + 
         np.random.randn(n_samples) * 0.5
     )
     
-    print("=== ИСХОДНЫЕ ДАННЫЕ ===")
-    print(f"Форма данных: {data.shape}")
-    print(f"Пропущенные значения: {data.isna().sum().sum()}")
-    print(f"Типы данных:\n{data.dtypes}")
+    print("=== ИСХОДНЫЕ Data ===")
+    print(f"Форма data: {data.shape}")
+    print(f"Missing values: {data.isna().sum().sum()}")
+    print(f"Типы data:\n{data.dtypes}")
     
-    # Создание и использование препроцессора
+    # Create and использование препроцессора
     config = AutoMLConfig()
     preprocessor = DataPreprocessor(config)
     
-    # Предобработка обучающих данных
+    # Preprocessing обучающих data
     processed_data = preprocessor.preprocess(data, fit=True)
     processed_target = preprocessor.preprocess_target(target)
     
-    print("\n=== ОБРАБОТАННЫЕ ДАННЫЕ ===")
-    print(f"Форма данных: {processed_data.shape}")
-    print(f"Пропущенные значения: {processed_data.isna().sum().sum()}")
-    print(f"Колонки: {list(processed_data.columns)}")
+    print("\n=== ОБРАБОТАННЫЕ Data ===")
+    print(f"Форма data: {processed_data.shape}")
+    print(f"Missing values: {processed_data.isna().sum().sum()}")
+    print(f"Columns: {list(processed_data.columns)}")
     
-    # Отчет по предобработке
+    # Отчет by предобработке
     print(preprocessor.get_preprocessing_report())
     
-    # Тестирование на новых данных (без обучения трансформеров)
+    # Testing on new data (without training трансформеров)
     test_data = data.iloc[-100:].copy()
     processed_test_data = preprocessor.preprocess(test_data, fit=False)
     
-    print(f"\n=== ТЕСТОВЫЕ ДАННЫЕ ===")
+    print(f"\n=== Test Data ===")
     print(f"Исходная форма: {test_data.shape}")
     print(f"Обработанная форма: {processed_test_data.shape}")

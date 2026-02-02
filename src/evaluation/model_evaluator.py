@@ -34,23 +34,23 @@ from ..utils.config_manager import AutoMLConfig
 
 @dataclass
 class EvaluationResult:
-    """Результат оценки модели"""
+    """Result оценки model"""
     model_name: str
     
-    # Метрики для обучающей выборки
+    # Metrics for training set
     train_mse: float
     train_mae: float
     train_r2: float
     
-    # Метрики для тестовой выборки
+    # Metrics for test set
     test_mse: float
     test_mae: float
     test_r2: float
     
-    # Кросс-валидация
+    # Cross-validation
     cross_val_scores: List[float]
     
-    # Важность признаков
+    # Важность features
     feature_importance: Dict[str, float]
     
     # Метаданные
@@ -59,11 +59,11 @@ class EvaluationResult:
 
 
 class CryptoTradingMetrics:
-    """Специализированные метрики для криптотрейдинга"""
+    """Specialized metrics for crypto trading"""
     
     @staticmethod
     def sharpe_ratio(returns: np.ndarray, risk_free_rate: float = 0.0) -> float:
-        """Вычисление коэффициента Шарпа"""
+        """Computation coefficient Шарпа"""
         try:
             if len(returns) == 0:
                 return 0.0
@@ -80,7 +80,7 @@ class CryptoTradingMetrics:
     
     @staticmethod
     def sortino_ratio(returns: np.ndarray, risk_free_rate: float = 0.0) -> float:
-        """Вычисление коэффициента Сортино"""
+        """Computation coefficient Сортино"""
         try:
             if len(returns) == 0:
                 return 0.0
@@ -102,7 +102,7 @@ class CryptoTradingMetrics:
     
     @staticmethod
     def maximum_drawdown(returns: np.ndarray) -> float:
-        """Вычисление максимальной просадки"""
+        """Computation максимальной drawdown"""
         try:
             if len(returns) == 0:
                 return 0.0
@@ -117,16 +117,16 @@ class CryptoTradingMetrics:
     
     @staticmethod
     def win_rate(predictions: np.ndarray, actuals: np.ndarray, threshold: float = 0.0) -> float:
-        """Вычисление процента прибыльных сделок"""
+        """Computation процента прибыльных сделок"""
         try:
             if len(predictions) == 0 or len(actuals) == 0:
                 return 0.0
             
-            # Определение направления предсказаний и фактических значений
+            # Determine directions predictions and actual values
             pred_direction = predictions > threshold
             actual_direction = actuals > threshold
             
-            # Подсчет правильных предсказаний направления
+            # Подсчет правильных predictions directions
             correct_predictions = pred_direction == actual_direction
             
             return np.mean(correct_predictions)
@@ -135,13 +135,13 @@ class CryptoTradingMetrics:
     
     @staticmethod
     def profit_factor(predictions: np.ndarray, actuals: np.ndarray) -> float:
-        """Вычисление фактора прибыли"""
+        """Computation фактора прибыли"""
         try:
             if len(predictions) == 0 or len(actuals) == 0:
                 return 0.0
             
-            # Предполагаем, что входим в позицию на основе предсказания
-            # и получаем доходность равную актуальному значению
+            # Assume we enter a position based on prediction
+            # and получаем return равную актуальному значению
             profitable_trades = actuals[predictions > 0]
             losing_trades = actuals[predictions < 0]
             
@@ -157,7 +157,7 @@ class CryptoTradingMetrics:
     
     @staticmethod
     def information_ratio(predictions: np.ndarray, actuals: np.ndarray, benchmark_return: float = 0.0) -> float:
-        """Вычисление информационного коэффициента"""
+        """Computation information coefficient"""
         try:
             if len(predictions) == 0 or len(actuals) == 0:
                 return 0.0
@@ -165,7 +165,7 @@ class CryptoTradingMetrics:
             # Активный доход (превышение над бенчмарком)
             active_returns = actuals - benchmark_return
             
-            # Ошибка отслеживания
+            # Error отслеживания
             tracking_error = np.std(active_returns)
             
             if tracking_error == 0:
@@ -178,8 +178,8 @@ class CryptoTradingMetrics:
 
 class ModelEvaluator:
     """
-    Комплексный оценщик моделей для криптотрейдинга
-    Реализует enterprise patterns
+    Комплексный оценщик models for crypto trading
+    Implements enterprise patterns
     """
     
     def __init__(self, config: Optional[AutoMLConfig] = None):
@@ -187,10 +187,10 @@ class ModelEvaluator:
         self.evaluation_config = self.config.model_evaluation
         self.console = Console()
         
-        # Кэш для SHAP объектов (если используется)
+        # Cache for SHAP objects (if используется)
         self.shap_cache = {}
         
-        logger.info("📊 ModelEvaluator инициализирован")
+        logger.info("📊 ModelEvaluator initialized")
     
     def evaluate_model(
         self,
@@ -203,20 +203,20 @@ class ModelEvaluator:
         task_type: str = "regression"
     ) -> EvaluationResult:
         """
-        Комплексная оценка модели
+        Комплексная evaluation model
         
         Args:
-            model: Обученная модель
-            X_train: Признаки обучающей выборки
-            y_train: Целевая переменная обучающей выборки
-            X_test: Признаки тестовой выборки
-            y_test: Целевая переменная тестовой выборки
-            model_name: Название модели
-            task_type: Тип задачи (regression/classification)
+            model: Обученная model
+            X_train: Features training set
+            y_train: Target variable training set
+            X_test: Features test set
+            y_test: Target variable test set
+            model_name: Название model
+            task_type: Тип tasks (regression/classification)
         """
         start_time = time.time()
         
-        logger.info(f"📊 Оценка модели {model_name}...")
+        logger.info(f"📊 Evaluate model {model_name}...")
         
         try:
             with Progress(
@@ -224,15 +224,15 @@ class ModelEvaluator:
                 TextColumn("[progress.description]{task.description}"),
             ) as progress:
                 
-                task = progress.add_task("Оценка модели...", total=None)
+                task = progress.add_task("Evaluate model...", total=None)
                 
-                # Предсказания
-                progress.update(task, description="Получение предсказаний...")
+                # Predictions
+                progress.update(task, description="Get predictions...")
                 y_train_pred = model.predict(X_train)
                 y_test_pred = model.predict(X_test)
                 
-                # Базовые метрики
-                progress.update(task, description="Вычисление базовых метрик...")
+                # Base metrics
+                progress.update(task, description="Computation base metrics...")
                 if task_type == "regression":
                     metrics = self._calculate_regression_metrics(
                         y_train, y_train_pred, y_test, y_test_pred
@@ -242,29 +242,29 @@ class ModelEvaluator:
                         y_train, y_train_pred, y_test, y_test_pred
                     )
                 
-                # Криптотрейдинговые метрики
-                progress.update(task, description="Вычисление криптотрейдинговых метрик...")
+                # Криптотрейдинговые metrics
+                progress.update(task, description="Computation crypto trading metrics...")
                 crypto_metrics = self._calculate_crypto_metrics(
                     y_test_pred, y_test
                 )
                 
-                # Кросс-валидация
-                progress.update(task, description="Кросс-валидация...")
+                # Cross-validation
+                progress.update(task, description="Cross-validation...")
                 cv_scores = self._perform_cross_validation(
                     model, X_train, y_train, task_type
                 )
                 
-                # Важность признаков
-                progress.update(task, description="Вычисление важности признаков...")
+                # Важность features
+                progress.update(task, description="Computation важности features...")
                 feature_importance = self._calculate_feature_importance(
                     model, X_train, y_train, model_name
                 )
                 
-                progress.update(task, description="✅ Оценка завершена", completed=True)
+                progress.update(task, description="✅ Evaluate завершена", completed=True)
             
             evaluation_time = time.time() - start_time
             
-            # Создание результата
+            # Create результата
             if task_type == "regression":
                 result = EvaluationResult(
                     model_name=model_name,
@@ -286,14 +286,14 @@ class ModelEvaluator:
                     evaluation_time=evaluation_time
                 )
             else:
-                # Адаптация для классификации
+                # Адаптация for классификации
                 result = EvaluationResult(
                     model_name=model_name,
-                    train_mse=0.0,  # Не применимо
-                    train_mae=0.0,  # Не применимо
+                    train_mse=0.0,  # Not применимо
+                    train_mae=0.0,  # Not применимо
                     train_r2=metrics.get('train_accuracy', 0.0),
-                    test_mse=0.0,   # Не применимо
-                    test_mae=0.0,   # Не применимо
+                    test_mse=0.0,   # Not применимо
+                    test_mae=0.0,   # Not применимо
                     test_r2=metrics.get('test_accuracy', 0.0),
                     cross_val_scores=cv_scores,
                     feature_importance=feature_importance,
@@ -307,18 +307,18 @@ class ModelEvaluator:
                     evaluation_time=evaluation_time
                 )
             
-            # Вывод результатов
+            # Вывод results
             self._print_evaluation_results(result)
             
-            logger.info(f"✅ Оценка модели {model_name} завершена за {evaluation_time:.2f}с")
+            logger.info(f"✅ Evaluate model {model_name} завершена for {evaluation_time:.2f}with")
             
             return result
             
         except Exception as e:
-            logger.error(f"❌ Ошибка оценки модели {model_name}: {e}")
+            logger.error(f"❌ Error оценки model {model_name}: {e}")
             evaluation_time = time.time() - start_time
             
-            # Возвращаем пустой результат в случае ошибки
+            # Return empty result in случае errors
             return EvaluationResult(
                 model_name=model_name,
                 train_mse=0.0, train_mae=0.0, train_r2=0.0,
@@ -335,7 +335,7 @@ class ModelEvaluator:
         y_test: pd.Series,
         y_test_pred: np.ndarray
     ) -> Dict[str, float]:
-        """Вычисление метрик регрессии"""
+        """Computation metrics регрессии"""
         
         metrics = {}
         
@@ -374,7 +374,7 @@ class ModelEvaluator:
         y_test: pd.Series,
         y_test_pred: np.ndarray
     ) -> Dict[str, float]:
-        """Вычисление метрик классификации"""
+        """Computation metrics классификации"""
         
         metrics = {}
         
@@ -390,12 +390,12 @@ class ModelEvaluator:
         metrics['test_recall'] = recall_score(y_test, y_test_pred, average='weighted', zero_division=0)
         metrics['test_f1'] = f1_score(y_test, y_test_pred, average='weighted', zero_division=0)
         
-        # AUC (если бинарная классификация)
+        # AUC (if binary classification)
         try:
             if len(np.unique(y_test)) == 2:
-                # Нужны вероятности для AUC
+                # Needed вероятности for AUC
                 if hasattr(self, 'predict_proba'):
-                    y_test_proba = y_test_pred  # Предполагаем что это уже вероятности
+                    y_test_proba = y_test_pred  # Предполагаем that this already вероятности
                     metrics['test_auc'] = roc_auc_score(y_test, y_test_proba)
                 else:
                     metrics['test_auc'] = 0.0
@@ -411,20 +411,20 @@ class ModelEvaluator:
         predictions: np.ndarray,
         actuals: pd.Series
     ) -> Dict[str, float]:
-        """Вычисление специализированных метрик для криптотрейдинга"""
+        """Computation specialized metrics for crypto trading"""
         
         crypto_metrics = {}
         
         try:
             actuals_array = actuals.values
             
-            # Коэффициент Шарпа
+            # Coefficient Шарпа
             crypto_metrics['sharpe_ratio'] = CryptoTradingMetrics.sharpe_ratio(actuals_array)
             
-            # Коэффициент Сортино
+            # Coefficient Сортино
             crypto_metrics['sortino_ratio'] = CryptoTradingMetrics.sortino_ratio(actuals_array)
             
-            # Максимальная просадка
+            # Maximum drawdown
             crypto_metrics['max_drawdown'] = CryptoTradingMetrics.maximum_drawdown(actuals_array)
             
             # Процент прибыльных сделок
@@ -433,16 +433,16 @@ class ModelEvaluator:
             # Фактор прибыли
             crypto_metrics['profit_factor'] = CryptoTradingMetrics.profit_factor(predictions, actuals_array)
             
-            # Информационный коэффициент
+            # Информационный coefficient
             crypto_metrics['information_ratio'] = CryptoTradingMetrics.information_ratio(
                 predictions, actuals_array
             )
             
-            # Корреляция предсказаний и фактических значений
+            # Correlation predictions and actual values
             crypto_metrics['prediction_correlation'] = np.corrcoef(predictions, actuals_array)[0, 1]
             
         except Exception as e:
-            logger.warning(f"⚠️ Ошибка вычисления криптометрик: {e}")
+            logger.warning(f"⚠️ Error вычисления криптометрик: {e}")
             crypto_metrics = {
                 'sharpe_ratio': 0.0,
                 'sortino_ratio': 0.0,
@@ -462,26 +462,26 @@ class ModelEvaluator:
         y: pd.Series,
         task_type: str
     ) -> List[float]:
-        """Выполнение кросс-валидации"""
+        """Execute cross-validation"""
         
         try:
             cv_folds = self.evaluation_config.cv_folds
             cv_scoring = self.evaluation_config.cv_scoring
             
-            # Определение скоринга по умолчанию
+            # Determine скоринга by default
             if cv_scoring is None:
                 if task_type == "regression":
                     cv_scoring = 'r2'
                 else:
                     cv_scoring = 'accuracy'
             
-            # Использование TimeSeriesSplit для временных рядов
+            # Использование TimeSeriesSplit for temporal рядов
             if hasattr(self.config, 'crypto_specific') and self.config.crypto_specific.get('walk_forward_validation', False):
                 cv = TimeSeriesSplit(n_splits=cv_folds)
             else:
                 cv = cv_folds
             
-            # Выполнение кросс-валидации
+            # Execute cross-validation
             scores = cross_val_score(
                 model, X, y,
                 cv=cv,
@@ -493,7 +493,7 @@ class ModelEvaluator:
             return scores.tolist()
             
         except Exception as e:
-            logger.warning(f"⚠️ Ошибка кросс-валидации: {e}")
+            logger.warning(f"⚠️ Error cross-validation: {e}")
             return []
     
     def _calculate_feature_importance(
@@ -503,13 +503,13 @@ class ModelEvaluator:
         y: pd.Series,
         model_name: str
     ) -> Dict[str, float]:
-        """Вычисление важности признаков"""
+        """Computation важности features"""
         
         try:
             method = self.evaluation_config.feature_importance_method
             
             if method == 'built_in' and hasattr(model, 'feature_importances_'):
-                # Встроенная важность признаков
+                # Встроенная важность features
                 importances = model.feature_importances_
                 return dict(zip(X.columns, importances))
                 
@@ -524,13 +524,13 @@ class ModelEvaluator:
                     )
                     return dict(zip(X.columns, perm_importance.importances_mean))
                 except Exception as e:
-                    logger.warning(f"⚠️ Ошибка permutation importance: {e}")
+                    logger.warning(f"⚠️ Error permutation importance: {e}")
                     return {}
                     
             elif method == 'shap' and model_name not in self.shap_cache:
-                # SHAP values (более медленный, но информативный)
+                # SHAP values (more slow, but informative)
                 try:
-                    # Ограничиваем размер выборки для SHAP
+                    # Limit size set for SHAP
                     sample_size = min(100, len(X))
                     X_sample = X.sample(n=sample_size, random_state=42)
                     
@@ -541,36 +541,36 @@ class ModelEvaluator:
                     
                     shap_values = explainer.shap_values(X_sample)
                     
-                    # Если многоклассовая классификация, берем первый класс
+                    # If многоклассовая classification, take первый класс
                     if isinstance(shap_values, list):
                         shap_values = shap_values[0]
                     
-                    # Средняя абсолютная важность по всем признакам
+                    # Average абсолютная важность by всем признакам
                     mean_abs_shap = np.mean(np.abs(shap_values), axis=0)
                     
                     self.shap_cache[model_name] = dict(zip(X.columns, mean_abs_shap))
                     return self.shap_cache[model_name]
                     
                 except Exception as e:
-                    logger.warning(f"⚠️ Ошибка SHAP importance: {e}")
+                    logger.warning(f"⚠️ Error SHAP importance: {e}")
                     return {}
             
-            # Fallback: равная важность всех признаков
+            # Fallback: равная важность всех features
             return {col: 1.0 / len(X.columns) for col in X.columns}
             
         except Exception as e:
-            logger.warning(f"⚠️ Ошибка вычисления важности признаков: {e}")
+            logger.warning(f"⚠️ Error вычисления важности features: {e}")
             return {}
     
     def _print_evaluation_results(self, result: EvaluationResult):
-        """Вывод результатов оценки"""
+        """Вывод results оценки"""
         
-        # Основная таблица с метриками
-        table = Table(title=f"📊 ОЦЕНКА МОДЕЛИ: {result.model_name.upper()}")
+        # Main таблица with метриками
+        table = Table(title=f"📊 Evaluation Model: {result.model_name.upper()}")
         
         table.add_column("Метрика", style="cyan", no_wrap=True)
-        table.add_column("Обучение", style="green")
-        table.add_column("Тест", style="magenta")
+        table.add_column("Training", style="green")
+        table.add_column("Test", style="magenta")
         
         if result.evaluation_metadata.get('task_type') == 'regression':
             table.add_row("R²", f"{result.train_r2:.4f}", f"{result.test_r2:.4f}")
@@ -580,7 +580,7 @@ class ModelEvaluator:
             if 'train_rmse' in result.evaluation_metadata.get('crypto_metrics', {}):
                 table.add_row("RMSE", f"{np.sqrt(result.train_mse):.4f}", f"{np.sqrt(result.test_mse):.4f}")
         else:
-            # Классификация
+            # Classification
             metrics = result.evaluation_metadata.get('classification_metrics', {})
             table.add_row("Accuracy", f"{metrics.get('train_accuracy', 0):.4f}", f"{metrics.get('test_accuracy', 0):.4f}")
             table.add_row("Precision", f"{metrics.get('train_precision', 0):.4f}", f"{metrics.get('test_precision', 0):.4f}")
@@ -589,19 +589,19 @@ class ModelEvaluator:
         
         self.console.print(table)
         
-        # Кросс-валидация
+        # Cross-validation
         if result.cross_val_scores:
             cv_mean = np.mean(result.cross_val_scores)
             cv_std = np.std(result.cross_val_scores)
-            cv_info = f"📊 Кросс-валидация: {cv_mean:.4f} ± {cv_std:.4f} (n={len(result.cross_val_scores)})"
+            cv_info = f"📊 Cross-validation: {cv_mean:.4f} ± {cv_std:.4f} (n={len(result.cross_val_scores)})"
             self.console.print(cv_info)
         
-        # Криптотрейдинговые метрики
+        # Криптотрейдинговые metrics
         crypto_metrics = result.evaluation_metadata.get('crypto_metrics', {})
         if crypto_metrics:
-            crypto_table = Table(title="💰 КРИПТОТРЕЙДИНГОВЫЕ МЕТРИКИ")
+            crypto_table = Table(title="💰 КРИПТОТРЕЙДИНГОВЫЕ Metrics")
             crypto_table.add_column("Метрика", style="cyan")
-            crypto_table.add_column("Значение", style="yellow")
+            crypto_table.add_column("Value", style="yellow")
             
             for metric, value in crypto_metrics.items():
                 if isinstance(value, float):
@@ -609,7 +609,7 @@ class ModelEvaluator:
             
             self.console.print(crypto_table)
         
-        # Топ важные признаки
+        # Топ важные features
         if result.feature_importance:
             top_features = sorted(
                 result.feature_importance.items(),
@@ -618,7 +618,7 @@ class ModelEvaluator:
             )[:10]
             
             if top_features:
-                features_info = "🔍 Топ-10 важных признаков:\n"
+                features_info = "🔍 Топ-10 важных features:\n"
                 for i, (feature, importance) in enumerate(top_features, 1):
                     features_info += f"  {i:2d}. {feature}: {importance:.4f}\n"
                 
@@ -629,24 +629,24 @@ class ModelEvaluator:
         results: List[EvaluationResult],
         save_path: Optional[str] = None
     ):
-        """Сравнение нескольких моделей"""
+        """Сравнение нескольких models"""
         
         if not results:
-            logger.warning("⚠️ Нет результатов для сравнения")
+            logger.warning("⚠️ No results for сравнения")
             return
         
-        logger.info(f"📊 Сравнение {len(results)} моделей")
+        logger.info(f"📊 Сравнение {len(results)} models")
         
         # Таблица сравнения
-        comparison_table = Table(title="🏆 СРАВНЕНИЕ МОДЕЛЕЙ")
+        comparison_table = Table(title="🏆 СРАВНЕНИЕ Models")
         
         comparison_table.add_column("Ранг", style="cyan", no_wrap=True)
-        comparison_table.add_column("Модель", style="magenta")
+        comparison_table.add_column("Model", style="magenta")
         comparison_table.add_column("Test R²", style="green")
         comparison_table.add_column("Test RMSE", style="yellow")
         comparison_table.add_column("CV Score", style="blue")
         
-        # Сортировка по test R²
+        # Sort by test R²
         sorted_results = sorted(results, key=lambda x: x.test_r2, reverse=True)
         
         for i, result in enumerate(sorted_results, 1):
@@ -663,7 +663,7 @@ class ModelEvaluator:
         
         self.console.print(comparison_table)
         
-        # Создание графика сравнения
+        # Create графика сравнения
         if save_path:
             self.plot_models_comparison(results, save_path)
     
@@ -672,7 +672,7 @@ class ModelEvaluator:
         results: List[EvaluationResult],
         save_path: str
     ):
-        """Создание графика сравнения моделей"""
+        """Create графика сравнения models"""
         
         try:
             fig, axes = plt.subplots(2, 2, figsize=(15, 12))
@@ -688,9 +688,9 @@ class ModelEvaluator:
             
             axes[0, 0].bar(x - width/2, train_r2, width, label='Train', alpha=0.7)
             axes[0, 0].bar(x + width/2, test_r2, width, label='Test', alpha=0.7)
-            axes[0, 0].set_xlabel('Модели')
+            axes[0, 0].set_xlabel('Model')
             axes[0, 0].set_ylabel('R² Score')
-            axes[0, 0].set_title('R² Score по моделям')
+            axes[0, 0].set_title('R² Score by моделям')
             axes[0, 0].set_xticks(x)
             axes[0, 0].set_xticklabels(model_names, rotation=45, ha='right')
             axes[0, 0].legend()
@@ -702,9 +702,9 @@ class ModelEvaluator:
             
             axes[0, 1].bar(x - width/2, train_rmse, width, label='Train', alpha=0.7)
             axes[0, 1].bar(x + width/2, test_rmse, width, label='Test', alpha=0.7)
-            axes[0, 1].set_xlabel('Модели')
+            axes[0, 1].set_xlabel('Model')
             axes[0, 1].set_ylabel('RMSE')
-            axes[0, 1].set_title('RMSE по моделям')
+            axes[0, 1].set_title('RMSE by моделям')
             axes[0, 1].set_xticks(x)
             axes[0, 1].set_xticklabels(model_names, rotation=45, ha='right')
             axes[0, 1].legend()
@@ -715,7 +715,7 @@ class ModelEvaluator:
             cv_stds = [np.std(r.cross_val_scores) if r.cross_val_scores else 0 for r in results]
             
             axes[1, 0].bar(model_names, cv_means, yerr=cv_stds, capsize=5, alpha=0.7)
-            axes[1, 0].set_xlabel('Модели')
+            axes[1, 0].set_xlabel('Model')
             axes[1, 0].set_ylabel('CV Score')
             axes[1, 0].set_title('Cross-validation Scores')
             axes[1, 0].tick_params(axis='x', rotation=45)
@@ -725,44 +725,44 @@ class ModelEvaluator:
             eval_times = [r.evaluation_time for r in results]
             
             axes[1, 1].bar(model_names, eval_times, alpha=0.7, color='orange')
-            axes[1, 1].set_xlabel('Модели')
-            axes[1, 1].set_ylabel('Время оценки (с)')
-            axes[1, 1].set_title('Время оценки моделей')
+            axes[1, 1].set_xlabel('Model')
+            axes[1, 1].set_ylabel('Время оценки (with)')
+            axes[1, 1].set_title('Время оценки models')
             axes[1, 1].tick_params(axis='x', rotation=45)
             axes[1, 1].grid(True, alpha=0.3)
             
             plt.tight_layout()
             
-            # Сохранение графика
+            # Save графика
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             logger.info(f"📊 График сравнения сохранен: {save_path}")
             
             plt.close()
             
         except Exception as e:
-            logger.error(f"❌ Ошибка создания графика сравнения: {e}")
+            logger.error(f"❌ Error creation графика сравнения: {e}")
     
     def generate_evaluation_report(
         self,
         results: List[EvaluationResult],
         save_path: Optional[str] = None
     ) -> str:
-        """Генерация подробного отчета по оценке"""
+        """Generation подробного отчета by оценке"""
         
         if not results:
-            return "Нет результатов для создания отчета"
+            return "No results for creation отчета"
         
         report = f"""
-=== ДЕТАЛЬНЫЙ ОТЧЕТ ПО ОЦЕНКЕ МОДЕЛЕЙ ===
+=== ДЕТАЛЬНЫЙ ОТЧЕТ By ОЦЕНКЕ Models ===
 
 Дата: {time.strftime('%Y-%m-%d %H:%M:%S')}
-Количество моделей: {len(results)}
+Number models: {len(results)}
 
 """
         
         # Сводная таблица
         report += "СВОДНАЯ ТАБЛИЦА:\n"
-        report += f"{'Модель':<20} {'Test R²':<10} {'Test RMSE':<12} {'CV Mean':<10} {'Время':<8}\n"
+        report += f"{'Model':<20} {'Test R²':<10} {'Test RMSE':<12} {'CV Mean':<10} {'Время':<8}\n"
         report += "-" * 70 + "\n"
         
         sorted_results = sorted(results, key=lambda x: x.test_r2, reverse=True)
@@ -773,15 +773,15 @@ class ModelEvaluator:
             
             report += f"{result.model_name:<20} {result.test_r2:<10.4f} {test_rmse:<12.4f} {cv_mean:<10.4f} {result.evaluation_time:<8.2f}\n"
         
-        # Детальная информация по каждой модели
+        # Детальная информация by each model
         report += "\n" + "="*70 + "\n"
-        report += "ДЕТАЛЬНАЯ ИНФОРМАЦИЯ ПО МОДЕЛЯМ:\n\n"
+        report += "ДЕТАЛЬНАЯ ИНФОРМАЦИЯ By МОДЕЛЯМ:\n\n"
         
         for i, result in enumerate(sorted_results, 1):
-            report += f"{i}. МОДЕЛЬ: {result.model_name.upper()}\n"
+            report += f"{i}. Model: {result.model_name.upper()}\n"
             report += "-" * 40 + "\n"
             
-            # Основные метрики
+            # Main metrics
             report += f"Обучающая выборка:\n"
             report += f"  R²: {result.train_r2:.4f}\n"
             report += f"  MSE: {result.train_mse:.4f}\n"
@@ -792,25 +792,25 @@ class ModelEvaluator:
             report += f"  MSE: {result.test_mse:.4f}\n"
             report += f"  MAE: {result.test_mae:.4f}\n"
             
-            # Кросс-валидация
+            # Cross-validation
             if result.cross_val_scores:
                 cv_mean = np.mean(result.cross_val_scores)
                 cv_std = np.std(result.cross_val_scores)
-                report += f"\nКросс-валидация:\n"
-                report += f"  Среднее: {cv_mean:.4f}\n"
+                report += f"\nCross-validation:\n"
+                report += f"  Average: {cv_mean:.4f}\n"
                 report += f"  Стд. отклонение: {cv_std:.4f}\n"
-                report += f"  Минимум: {np.min(result.cross_val_scores):.4f}\n"
+                report += f"  Minimum: {np.min(result.cross_val_scores):.4f}\n"
                 report += f"  Максимум: {np.max(result.cross_val_scores):.4f}\n"
             
-            # Криптотрейдинговые метрики
+            # Криптотрейдинговые metrics
             crypto_metrics = result.evaluation_metadata.get('crypto_metrics', {})
             if crypto_metrics:
-                report += f"\nКриптотрейдинговые метрики:\n"
+                report += f"\nКриптотрейдинговые metrics:\n"
                 for metric, value in crypto_metrics.items():
                     if isinstance(value, float):
                         report += f"  {metric.replace('_', ' ').title()}: {value:.4f}\n"
             
-            # Топ признаки
+            # Топ features
             if result.feature_importance:
                 top_features = sorted(
                     result.feature_importance.items(),
@@ -818,16 +818,16 @@ class ModelEvaluator:
                     reverse=True
                 )[:5]
                 
-                report += f"\nТоп-5 важных признаков:\n"
+                report += f"\nТоп-5 важных features:\n"
                 for j, (feature, importance) in enumerate(top_features, 1):
                     report += f"  {j}. {feature}: {importance:.4f}\n"
             
             # Метаданные
             report += f"\nМетаданные:\n"
-            report += f"  Время оценки: {result.evaluation_time:.2f}с\n"
-            report += f"  Обучающих образцов: {result.evaluation_metadata.get('train_samples', 'N/A')}\n"
-            report += f"  Тестовых образцов: {result.evaluation_metadata.get('test_samples', 'N/A')}\n"
-            report += f"  Количество признаков: {result.evaluation_metadata.get('features_count', 'N/A')}\n"
+            report += f"  Время оценки: {result.evaluation_time:.2f}with\n"
+            report += f"  Обучающих samples: {result.evaluation_metadata.get('train_samples', 'N/A')}\n"
+            report += f"  Test samples: {result.evaluation_metadata.get('test_samples', 'N/A')}\n"
+            report += f"  Number features: {result.evaluation_metadata.get('features_count', 'N/A')}\n"
             
             report += "\n"
         
@@ -836,7 +836,7 @@ class ModelEvaluator:
         report += "РЕКОМЕНДАЦИИ:\n\n"
         
         best_model = sorted_results[0]
-        report += f"🏆 Лучшая модель: {best_model.model_name}\n"
+        report += f"🏆 Best model: {best_model.model_name}\n"
         report += f"📊 Test R²: {best_model.test_r2:.4f}\n"
         
         if len(results) > 1:
@@ -848,9 +848,9 @@ class ModelEvaluator:
         overfitting = best_model.train_r2 - best_model.test_r2
         if overfitting > 0.1:
             report += f"⚠️  Возможное переобучение (разность Train-Test R²: {overfitting:.4f})\n"
-            report += "   Рекомендуется усиление регуляризации или сбор дополнительных данных\n"
+            report += "   Recommended усиление regularization or сбор additional data\n"
         
-        # Сохранение отчета
+        # Save отчета
         if save_path:
             with open(save_path, 'w', encoding='utf-8') as f:
                 f.write(report)
@@ -860,12 +860,12 @@ class ModelEvaluator:
 
 
 if __name__ == "__main__":
-    # Пример использования ModelEvaluator
+    # Пример use ModelEvaluator
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.linear_model import Ridge
     from sklearn.model_selection import train_test_split
     
-    # Создание тестовых данных
+    # Create test data
     np.random.seed(42)
     n_samples, n_features = 1000, 20
     
@@ -878,12 +878,12 @@ if __name__ == "__main__":
         X.iloc[:, :5].sum(axis=1) + 0.1 * np.random.randn(n_samples)
     )
     
-    # Разделение данных
+    # Split data
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
     
-    # Создание и обучение моделей
+    # Create and training models
     models = {
         'ridge': Ridge(alpha=1.0),
         'random_forest': RandomForestRegressor(n_estimators=50, random_state=42)
@@ -891,11 +891,11 @@ if __name__ == "__main__":
     
     results = []
     
-    # Создание оценщика
+    # Create оценщика
     config = AutoMLConfig()
     evaluator = ModelEvaluator(config)
     
-    # Оценка каждой модели
+    # Evaluate each model
     for name, model in models.items():
         model.fit(X_train, y_train)
         
@@ -906,10 +906,10 @@ if __name__ == "__main__":
         
         results.append(result)
     
-    # Сравнение моделей
+    # Сравнение models
     evaluator.compare_models(results)
     
-    # Генерация отчета
+    # Generation отчета
     report = evaluator.generate_evaluation_report(results)
     print("\n" + "="*50)
     print("КРАТКИЙ ОТЧЕТ:")
