@@ -1,6 +1,9 @@
-# 🤖 ML AutoML Pipeline for Crypto Trading Bot v5.0
+# ML AutoML Pipeline for Crypto Trading Bot
 
-## 📋 Overview
+[![CI](https://github.com/KeepALifeUS/ml-automl-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/KeepALifeUS/ml-automl-pipeline/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+## Overview
 
 Comprehensive automated machine learning pipeline specifically designed for cryptocurrency trading applications. Built with enterprise-grade **enterprise patterns** for production-ready scalability, reliability, and maintainability.
 
