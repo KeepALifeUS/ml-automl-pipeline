@@ -575,3 +575,7 @@ For support and questions:
 ---
 
 **Built with enterprise patterns for Production-Ready ML Systems**
+
+## Support
+
+For questions and support, please open an issue on GitHub.
