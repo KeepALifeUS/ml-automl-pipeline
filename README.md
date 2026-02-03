@@ -7,17 +7,17 @@
 
 Comprehensive automated machine learning pipeline specifically designed for cryptocurrency trading applications. Built with enterprise-grade **enterprise patterns** for production-ready scalability, reliability, and maintainability.
 
-### 🎯 Key Features
+### Key Features
 
-- **🔧 Automated Feature Engineering**: Technical indicators, statistical features, polynomial transformations, and TSFresh time series features
-- **🎪 Advanced Feature Selection**: Multi-method ensemble selection with statistical, model-based, and correlation-based approaches
-- **⚙️ Hyperparameter Optimization**: Bayesian optimization with Optuna and scikit-optimize
-- **🤖 Automated Model Selection**: Support for 15+ ML algorithms with automatic performance comparison
-- **🤝 Ensemble Building**: Voting, stacking, and blending ensemble methods
-- **📊 Comprehensive Evaluation**: Multiple metrics, feature importance, and detailed reporting
-- **🚀 Production Ready**: enterprise patterns, logging, monitoring, and error handling
+- **Automated Feature Engineering**: Technical indicators, statistical features, polynomial transformations, and TSFresh time series features
+- **Advanced Feature Selection**: Multi-method ensemble selection with statistical, model-based, and correlation-based approaches
+- **Hyperparameter Optimization**: Bayesian optimization with Optuna and scikit-optimize
+- **Automated Model Selection**: Support for 15+ ML algorithms with automatic performance comparison
+- **Ensemble Building**: Voting, stacking, and blending ensemble methods
+- **Comprehensive Evaluation**: Multiple metrics, feature importance, and detailed reporting
+- **Production Ready**: enterprise patterns, logging, monitoring, and error handling
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 
@@ -49,7 +49,7 @@ ml-automl-pipeline/
 
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -125,7 +125,7 @@ config.save_to_file("my_automl_config.json")
 
 ```
 
-## 🎨 Feature Engineering
+## Feature Engineering
 
 ### Technical Indicators for Crypto
 
@@ -152,7 +152,7 @@ config.save_to_file("my_automl_config.json")
 - Feature selection based on importance
 - Correlation-based feature filtering
 
-## ⚙️ Hyperparameter Optimization
+## Hyperparameter Optimization
 
 ### Supported Optimizers
 
@@ -170,7 +170,7 @@ config.save_to_file("my_automl_config.json")
 - Custom search spaces per model
 - Convergence monitoring and visualization
 
-## 🤖 Model Selection
+## Model Selection
 
 ### Supported Models
 
@@ -196,7 +196,7 @@ config.save_to_file("my_automl_config.json")
 - Performance-based ranking
 - Resource usage monitoring
 
-## 🤝 Ensemble Methods
+## Ensemble Methods
 
 ### Ensemble Types
 
@@ -212,7 +212,7 @@ config.save_to_file("my_automl_config.json")
 - Cross-validation for meta-learning
 - Ensemble performance comparison
 
-## 📊 Model Evaluation
+## Model Evaluation
 
 ### Regression Metrics
 
@@ -237,7 +237,7 @@ config.save_to_file("my_automl_config.json")
 - Sortino ratio
 - Win rate and profit factor
 
-## 🔧 Configuration Presets
+## Configuration Presets
 
 ### Available Presets
 
@@ -269,7 +269,7 @@ config = PresetConfigs.high_frequency_trading()
 | Ensemble Methods    | None           | All        | Voting+Stacking | None    |
 | Processing Time     | ~5 min         | ~2 hours   | ~30 min         | ~10 min |
 
-## 🚀 Production Deployment
+## Production Deployment
 
 ### Model Persistence
 
@@ -322,7 +322,7 @@ config.cache_dir = "automl_cache"
 
 ```
 
-## 📈 Crypto Trading Integration
+## Crypto Trading Integration
 
 ### Data Format Requirements
 
@@ -354,7 +354,7 @@ data = pd.DataFrame({
 - **Risk-Adjusted Metrics**: Sharpe, Sortino ratios
 - **Drawdown Analysis**: Maximum drawdown calculation
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -370,7 +370,7 @@ python -m pytest tests/ --cov=src --cov-report=html
 
 ```
 
-## 📚 Examples
+## Examples
 
 ### Complete Crypto Trading Example
 
@@ -409,9 +409,9 @@ result = pipeline.run(
     time_series_split=True
 )
 
-print(f"🏆 Best model: {result.best_model_name}")
-print(f"📊 Test R²: {result.evaluation_result.test_r2:.4f}")
-print(f"⏱️ Total time: {result.total_time:.1f}s")
+print(f"Best model: {result.best_model_name}")
+print(f"Test R²: {result.evaluation_result.test_r2:.4f}")
+print(f"Total time: {result.total_time:.1f}s")
 
 ```
 
@@ -471,7 +471,7 @@ for model, result in optimization_results.items():
 
 ```
 
-## ⚡ Performance Tips
+## Performance Tips
 
 ### Speed Optimization
 
@@ -496,7 +496,7 @@ for model, result in optimization_results.items():
 - Enable all ensemble methods
 - Validate with walk-forward analysis
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -543,7 +543,7 @@ result = pipeline.run(data, target_column, stages=['data_preprocessing', 'featur
 
 ```
 
-## 🔗 Integration with ML-Framework
+## Integration with ML-Framework
 
 This AutoML pipeline is designed to integrate seamlessly with the Crypto Trading Bot v5.0 ecosystem:
 
@@ -552,11 +552,11 @@ This AutoML pipeline is designed to integrate seamlessly with the Crypto Trading
 - **Risk Management**: Outputs compatible with `@ml-framework/risk-management`
 - **Backtesting**: Models integrate with `@ml-framework/backtesting-engine`
 
-## 📄 License
+## License
 
 MIT License - see LICENSE file for details.
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -564,7 +564,7 @@ MIT License - see LICENSE file for details.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📞 Support
+## Support
 
 For support and questions:
 
@@ -574,4 +574,4 @@ For support and questions:
 
 ---
 
-**Built with enterprise patterns for Production-Ready ML Systems** 🚀
+**Built with enterprise patterns for Production-Ready ML Systems**
